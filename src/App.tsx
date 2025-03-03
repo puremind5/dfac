@@ -12,36 +12,36 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const handleChestSelect = async (chestIndex: number) => {
-    try {
-      setLoading(true);
-      setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
-      const response = await fetch('/api/game/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerChoice: chestIndex }), // Теперь отправляем индекс без +1
-      });
+    const response = await fetch('/api/game/play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerChoice: chestIndex }), 
+    });
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("API Response in App.tsx:", data);
-
-      if (!data || typeof data !== 'object' || !data.results) {
-        throw new Error("Invalid response format");
-      }
-
-      setResults(data);
-      setGameState('results');
-    } catch (err) {
-      setError('Failed to connect to the game server');
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    console.log("API Response in App.tsx:", data);
+
+    if (!data || typeof data !== 'object' || !('winner' in data)) {
+      throw new Error("Invalid response format");
+    }
+
+    setResults(data);
+    setGameState('results');
+  } catch (err) {
+    setError('Failed to connect to the game server');
+    console.error("Fetch error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const startNewRound = () => {
     setGameState('choosing');
