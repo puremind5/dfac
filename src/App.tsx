@@ -56,7 +56,7 @@ function App() {
         <div className="bg-gradient-to-r from-amber-500 to-yellow-500 p-6">
           <div className="flex items-center justify-center">
             <Treasure className="h-10 w-10 text-yellow-100 mr-3" />
-            <h1 className="text-3xl font-bold text-white">Treasure Hunt</h1>
+            <h1 className="text-3xl font-bold text-white">Охота за сокровищами</h1>
           </div>
         </div>
 
@@ -65,6 +65,17 @@ function App() {
             {error}
           </div>
         )}
+
+        {/* Описание игры на светлом фоне */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
+          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
+          <ul className="text-sm space-y-1 text-gray-700">
+            <li>• Вы играете против 3 ботов</li>
+            <li>• В каждом сундуке разное количество золота: 10, 20, 50 или 100 монет</li>
+            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
+            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
+          </ul>
+        </div>
 
         {/* Игровая доска (сундуки остаются видимыми, но отключаются после выбора) */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
