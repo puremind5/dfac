@@ -11,6 +11,14 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState<boolean>(true);
 
+  // 🌟 Сохраняем золото для игрока и ботов
+  const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
+    You: 0,
+    "Bot 1": 0,
+    "Bot 2": 0,
+    "Bot 3": 0,
+  });
+
   const handleChestSelect = async (chestIndex: number) => {
     if (!gameActive) return;
 
@@ -37,6 +45,14 @@ function App() {
       }
 
       setResults(data);
+
+      // 🌟 Если кто-то выиграл, добавляем золото к его общему счёту
+      if (data.winner !== "No winner") {
+        setTotalGold(prevGold => ({
+          ...prevGold,
+          [data.winner]: (prevGold[data.winner] || 0) + data.reward,
+        }));
+      }
     } catch (err) {
       setError('Failed to connect to the game server');
       console.error("Fetch error:", err);
@@ -66,7 +82,17 @@ function App() {
           </div>
         )}
 
-        {/* Описание игры на светлом фоне */}
+        {/* 🌟 Таблица с накопленным золотом */}
+        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
+          <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
+          <ul className="text-sm text-gray-700">
+            {Object.entries(totalGold).map(([player, gold]) => (
+              <li key={player} className="py-1">{player}: {gold} монет</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Описание игры */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
           <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
           <ul className="text-sm space-y-1 text-gray-700">
