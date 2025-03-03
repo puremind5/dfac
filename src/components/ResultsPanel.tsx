@@ -1,7 +1,7 @@
 import React from 'react';
 
-const ResultsPanel = ({ results, onNewRound }) => {
-  console.log("Received results in ResultsPanel:", results); // Логируем данные
+const ResultsPanel: React.FC<{ results: any; onNewRound: () => void }> = ({ results, onNewRound }) => {
+  console.log("Received results in ResultsPanel:", results);
 
   if (!results || typeof results !== 'object') {
     return <div className="text-center text-red-500">Error: No valid results</div>;
