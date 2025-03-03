@@ -10,16 +10,19 @@ router.post('/game/play', (req, res) => {
   try {
     console.log("Received request body:", req.body);
 
-    // Проверяем, что тело запроса содержит playerChoice
-    if (!req.body || typeof req.body.playerChoice === 'undefined') {
+    // Проверяем, что playerChoice передан корректно
+    if (!req.body || !("playerChoice" in req.body)) {
       console.error("Error: No playerChoice received");
       return res.status(400).json({ error: 'Invalid request. No playerChoice provided.' });
     }
 
-    const playerChoice = Number(req.body.playerChoice);
-    console.log("Parsed playerChoice:", playerChoice);
+    // Преобразуем в число (исправляем проблему с "0")
+    let playerChoice = Number(req.body.playerChoice);
+    
+    console.log("Parsed playerChoice:", playerChoice, "Type:", typeof playerChoice);
 
-    if (!Number.isInteger(playerChoice) || ![1, 2, 3, 4].includes(playerChoice)) {
+    // Проверяем, что playerChoice действительно 1, 2, 3 или 4
+    if (![1, 2, 3, 4].includes(playerChoice)) {
       console.error("Error: Invalid choice");
       return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
     }
