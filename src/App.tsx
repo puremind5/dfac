@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
-import ResultsPanel from './components/ResultsPanel';
 
 const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 };
 
@@ -82,16 +81,6 @@ function App() {
           </div>
         )}
 
-        {/* 🌟 Таблица с накопленным золотом */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
-          <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
-          <ul className="text-sm text-gray-700">
-            {Object.entries(totalGold).map(([player, gold]) => (
-              <li key={player} className="py-1">{player}: {gold} монет</li>
-            ))}
-          </ul>
-        </div>
-
         {/* Описание игры */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
           <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
@@ -106,14 +95,47 @@ function App() {
         {/* Игровая доска (сундуки остаются видимыми, но отключаются после выбора) */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
-        {/* Место для результатов зарезервировано заранее */}
-        <div className="mt-6 min-h-[180px] flex items-center justify-center bg-gray-100 rounded-lg shadow-md">
-          {results ? (
-            <ResultsPanel results={results} onNewRound={startNewRound} />
-          ) : (
-            <p className="text-gray-500">Выберите сундук, чтобы начать игру</p>
-          )}
+        {/* 🌟 Общий счёт + результаты текущего раунда в одном блоке */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
+          {/* Левая колонка: Общий счёт */}
+          <div className="text-center">
+            <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
+            <ul className="text-sm text-gray-700">
+              {Object.entries(totalGold).map(([player, gold]) => (
+                <li key={player} className="py-1">{player}: {gold} монет</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Правая колонка: Результаты текущей игры */}
+          <div className="text-center">
+            <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
+            {results ? (
+              <>
+                <p className="text-lg font-semibold">
+                  {results.winner === "You" ? `🎉 Вы выиграли ${results.reward} золота! 💰` 
+                    : results.winner.includes("Bot") ? `🤖 ${results.winner} выиграл ${results.reward} золота!` 
+                    : "Никто не выиграл в этом раунде."}
+                </p>
+                <ul className="text-sm text-gray-700 mt-2">
+                  <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
+                  {results.botChoices.map((choice: number, index: number) => (
+                    <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+                  ))}
+                </ul>
+                <button 
+                  className="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+                  onClick={startNewRound}
+                >
+                  Играть снова
+                </button>
+              </>
+            ) : (
+              <p className="text-gray-500">Выберите сундук, чтобы начать игру</p>
+            )}
+          </div>
         </div>
+
       </div>
     </div>
   );
