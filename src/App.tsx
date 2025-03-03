@@ -88,6 +88,21 @@ function App() {
           </div>
         )}
 
+        {/* 🌟 Описание игры */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
+          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
+          <ul className="text-sm space-y-1 text-gray-700">
+            <li>• Вы играете против 3 ботов</li>
+            <li>• В каждом сундуке разное количество золота: 10, 20, 50 или 100 монет</li>
+            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
+            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
+            <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
+          </ul>
+        </div>
+
+        {/* 🎯 Игровая доска */}
+        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+
         {/* 🌟 Общий счёт + результаты текущего раунда в одном блоке */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
           {/* Левая колонка: Общий счёт */}
@@ -131,13 +146,9 @@ function App() {
           </div>
         </div>
 
-        {/* 🎯 Игровая доска теперь всегда отображается */}
-        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
-
       </div>
     </div>
   );
 }
 
 export default App;
-
