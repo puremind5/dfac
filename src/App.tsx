@@ -3,17 +3,21 @@ import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
 import ResultsPanel from './components/ResultsPanel';
 
-const CHEST_VALUES = { 0: 10, 1: 20, 2: 50, 3: 100 };
+const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 };
 
 function App() {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [gameActive, setGameActive] = useState<boolean>(true); // Управляет активностью раунда
 
   const handleChestSelect = async (chestIndex: number) => {
+    if (!gameActive) return; // ❌ Запрещаем выбор сундука, если раунд завершён
+
     try {
       setLoading(true);
       setError(null);
+      setGameActive(false); // 🔒 Блокируем игру до нажатия "Играть снова"
 
       const response = await fetch('/api/game/play', {
         method: 'POST',
@@ -43,6 +47,7 @@ function App() {
 
   const startNewRound = () => {
     setResults(null);
+    setGameActive(true); // ✅ Разрешаем выбор сундуков снова
   };
 
   return (
@@ -61,8 +66,8 @@ function App() {
           </div>
         )}
 
-        {/* Игровая доска (сундуки остаются видимыми) */}
-        <GameBoard onChestSelect={handleChestSelect} loading={loading} />
+        {/* Игровая доска (сундуки остаются видимыми, но отключаются после выбора) */}
+        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
         {/* Показываем результаты под сундуками, если игра завершилась */}
         {results && <ResultsPanel results={results} onNewRound={startNewRound} />}
