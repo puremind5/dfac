@@ -12,10 +12,10 @@ const GameBoard: React.FC<{ onChestSelect: (index: number) => void; loading: boo
           <button
             key={index}
             className="p-4 border-4 border-yellow-500 bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold text-lg rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-            onClick={() => onChestSelect(index + 1)} // Теперь сундуки от 1 до 4
+            onClick={() => onChestSelect(index + 1)} // Сундуки от 1 до 4
             disabled={loading}
           >
-            💰 Chest {index + 1}: {value} Gold
+            💰 {value} Gold
           </button>
         ))}
       </div>
@@ -26,4 +26,5 @@ const GameBoard: React.FC<{ onChestSelect: (index: number) => void; loading: boo
 };
 
 export default GameBoard;
+
 
