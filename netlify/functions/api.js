@@ -6,7 +6,7 @@ app.use(express.json());
 
 const router = express.Router();
 
-const CHEST_VALUES = { 0: 10, 1: 20, 2: 50, 3: 100 };
+const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 }; // Теперь сундуки от 1 до 4
 
 router.post('/game/play', (req, res) => {
   try {
@@ -15,15 +15,15 @@ router.post('/game/play', (req, res) => {
     const playerChoice = Number(req.body.playerChoice);
     console.log("Parsed playerChoice:", playerChoice, "Type:", typeof playerChoice);
 
-    if (![0, 1, 2, 3].includes(playerChoice)) {
-      return res.status(400).json({ error: 'Invalid choice. Choose a chest from 0 to 3.' });
+    if (![1, 2, 3, 4].includes(playerChoice)) {
+      return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
     }
 
-    // Боты делают случайный выбор сундуков
+    // Боты делают случайный выбор сундуков (от 1 до 4)
     const botChoices = [
-      Math.floor(Math.random() * 4),
-      Math.floor(Math.random() * 4),
-      Math.floor(Math.random() * 4),
+      Math.ceil(Math.random() * 4),
+      Math.ceil(Math.random() * 4),
+      Math.ceil(Math.random() * 4),
     ];
 
     const allChoices = [playerChoice, ...botChoices];
@@ -36,7 +36,7 @@ router.post('/game/play', (req, res) => {
 
     console.log("Choice counts:", choiceCount);
 
-    // Определяем уникальные выборы (сундуки, которые выбраны только одним игроком/ботом)
+    // Определяем уникальные выборы
     const uniqueChoices = Object.keys(choiceCount)
       .map(Number)
       .filter(choice => choiceCount[choice] === 1);
