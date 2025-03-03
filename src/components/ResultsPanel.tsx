@@ -44,3 +44,4 @@ const ResultsPanel: React.FC<{ results: any; onNewRound: () => void }> = ({ resu
 
 export default ResultsPanel;
 
+
