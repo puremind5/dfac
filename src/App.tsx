@@ -9,15 +9,15 @@ function App() {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [gameActive, setGameActive] = useState<boolean>(true); // Управляет активностью раунда
+  const [gameActive, setGameActive] = useState<boolean>(true);
 
   const handleChestSelect = async (chestIndex: number) => {
-    if (!gameActive) return; // ❌ Запрещаем выбор сундука, если раунд завершён
+    if (!gameActive) return;
 
     try {
       setLoading(true);
       setError(null);
-      setGameActive(false); // 🔒 Блокируем игру до нажатия "Играть снова"
+      setGameActive(false);
 
       const response = await fetch('/api/game/play', {
         method: 'POST',
@@ -47,7 +47,7 @@ function App() {
 
   const startNewRound = () => {
     setResults(null);
-    setGameActive(true); // ✅ Разрешаем выбор сундуков снова
+    setGameActive(true);
   };
 
   return (
@@ -69,8 +69,14 @@ function App() {
         {/* Игровая доска (сундуки остаются видимыми, но отключаются после выбора) */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
-        {/* Показываем результаты под сундуками, если игра завершилась */}
-        {results && <ResultsPanel results={results} onNewRound={startNewRound} />}
+        {/* Место для результатов зарезервировано заранее */}
+        <div className="mt-6 min-h-[180px] flex items-center justify-center bg-gray-100 rounded-lg shadow-md">
+          {results ? (
+            <ResultsPanel results={results} onNewRound={startNewRound} />
+          ) : (
+            <p className="text-gray-500">Выберите сундук, чтобы начать игру</p>
+          )}
+        </div>
       </div>
     </div>
   );
