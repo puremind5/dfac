@@ -14,9 +14,9 @@ function App() {
   // 🌟 Сохраняем золото для игрока и ботов
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
     You: 100, // Начальный баланс игрока
-    "Bot 1": 0,
-    "Bot 2": 0,
-    "Bot 3": 0,
+    "Bot 1": 100,
+    "Bot 2": 100,
+    "Bot 3": 100,
   });
 
   const handleChestSelect = async (chestIndex: number) => {
@@ -27,10 +27,12 @@ function App() {
       setError(null);
       setGameActive(false);
 
-      // 💰 Вычитаем стоимость игры перед отправкой запроса
+      // 💰 Вычитаем стоимость игры у всех игроков (игрока и ботов)
       setTotalGold(prevGold => ({
-        ...prevGold,
         You: prevGold["You"] - GAME_COST,
+        "Bot 1": prevGold["Bot 1"] - GAME_COST,
+        "Bot 2": prevGold["Bot 2"] - GAME_COST,
+        "Bot 3": prevGold["Bot 3"] - GAME_COST,
       }));
 
       const response = await fetch('/api/game/play', {
@@ -53,12 +55,10 @@ function App() {
       setResults(data);
 
       // 🌟 Если кто-то выиграл, добавляем золото к его общему счёту
-      if (data.winner !== "No winner") {
-        setTotalGold(prevGold => ({
-          ...prevGold,
-          [data.winner]: (prevGold[data.winner] || 0) + data.reward,
-        }));
-      }
+      setTotalGold(prevGold => ({
+        ...prevGold,
+        [data.winner]: data.winner !== "No winner" ? (prevGold[data.winner] || 0) + data.reward : prevGold[data.winner],
+      }));
     } catch (err) {
       setError('Failed to connect to the game server');
       console.error("Fetch error:", err);
@@ -131,9 +131,13 @@ function App() {
           </div>
         </div>
 
+        {/* 🎯 Игровая доска теперь всегда отображается */}
+        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+
       </div>
     </div>
   );
 }
 
 export default App;
+
