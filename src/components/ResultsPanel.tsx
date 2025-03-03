@@ -107,4 +107,3 @@ const ResultsPanel = ({ results, onNewRound }) => {
   );
 };
 
-export default ResultsPanel;
