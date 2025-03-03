@@ -17,6 +17,7 @@
     "express": "^4.18.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
+     "react-confetti": "^1.6.0", // 👈 Должно быть здесь
     "react-dom": "^18.3.1",
     "serverless-http": "^3.2.0"
   },
