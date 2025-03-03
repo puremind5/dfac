@@ -6,7 +6,7 @@ app.use(express.json());
 
 const router = express.Router();
 
-const CHEST_VALUES = { 0: 10, 1: 20, 2: 50, 3: 100 }; // Исправленные значения золота
+const CHEST_VALUES = { 0: 10, 1: 20, 2: 50, 3: 100 };
 
 router.post('/game/play', (req, res) => {
   try {
@@ -36,7 +36,7 @@ router.post('/game/play', (req, res) => {
 
     console.log("Choice counts:", choiceCount);
 
-    // Определяем уникальные выборы
+    // Находим уникальные выборы (сундуки, которые выбраны только одним игроком/ботом)
     const uniqueChoices = Object.keys(choiceCount)
       .map(Number)
       .filter(choice => choiceCount[choice] === 1);
@@ -45,11 +45,13 @@ router.post('/game/play', (req, res) => {
     let reward = 0;
 
     if (uniqueChoices.length > 0) {
-      // Выбираем сундук с максимальной ценностью среди уникальных
+      // Выбираем самый дорогой уникальный сундук
       const bestChoice = uniqueChoices.reduce((best, choice) => 
         CHEST_VALUES[choice] > CHEST_VALUES[best] ? choice : best, uniqueChoices[0]);
 
-      // Если лучший выбор сделал игрок — он выигрывает
+      console.log("Best unique choice:", bestChoice);
+
+      // Если этот сундук выбрал игрок — он выигрывает
       if (playerChoice === bestChoice) {
         winner = "You";
         reward = CHEST_VALUES[bestChoice];
@@ -66,4 +68,3 @@ router.post('/game/play', (req, res) => {
 app.use('/api', router);
 
 module.exports.handler = serverless(app);
-
