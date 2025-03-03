@@ -13,7 +13,9 @@ const ResultsPanel: React.FC<{ results: any; onNewRound: () => void }> = ({ resu
 
       <div className="bg-gray-100 p-4 rounded-lg shadow">
         <p className="text-center text-lg font-bold">
-          {results.winner === "You" ? `🎉 You won ${results.reward} gold! 💰` : "No one won this round."}
+          {results.winner === "You" ? `🎉 You won ${results.reward} gold! 💰` 
+            : results.winner.includes("Bot") ? `🤖 ${results.winner} won ${results.reward} gold!` 
+            : "No one won this round."}
         </p>
       </div>
 
@@ -41,3 +43,4 @@ const ResultsPanel: React.FC<{ results: any; onNewRound: () => void }> = ({ resu
 };
 
 export default ResultsPanel;
+
