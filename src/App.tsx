@@ -19,7 +19,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ playerChoice: chestIndex }),
+        body: JSON.stringify({ playerChoice: Number(chestIndex + 1) }),
       });
       
       if (!response.ok) {
