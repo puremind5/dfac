@@ -42,6 +42,7 @@ router.post('/game/play', (req, res) => {
 
     res.json({ success: true, playerChoice, botChoices, winner, reward });
   } catch (error) {
+    console.error("Unexpected error:", error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
