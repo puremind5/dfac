@@ -1,107 +1,31 @@
 import React from 'react';
-import { Trash as Treasure, Trophy, RefreshCw, User, Bot } from 'lucide-react';
-
-interface ResultsPanelProps {
-  results: {
-    players: Array<{
-      name: string;
-      choice: number;
-    }>;
-    chestValues: number[];
-    winner: number;
-    score: number;
-    validChests: Record<string, number>;
-  };
-  onNewRound: () => void;
-}
 
 const ResultsPanel = ({ results, onNewRound }) => {
   console.log("Received results in ResultsPanel:", results); // Логируем данные
 
-  // Проверяем, что results существует и содержит массив results.results
-  if (!results || !Array.isArray(results.results)) {
+  // Проверяем, что results существует и содержит массив
+  if (!results || !Array.isArray(results)) {
     return <div className="text-center text-red-500">Error: No valid results</div>;
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Game Results</h2>
-      <ul>
-        {results.results.map((result, index) => (
-          <li key={index}>
-            {result.player} chose chest {result.choice} and scored {result.points} points
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4 text-center">Game Results</h2>
+      <ul className="bg-gray-100 p-4 rounded-lg shadow">
+        {results.map((result, index) => (
+          <li key={index} className="border-b py-2 last:border-b-0 text-center">
+            <span className="font-semibold">{result.player}</span> chose chest {result.choice} and scored <span className="font-semibold">{result.points}</span> points.
           </li>
         ))}
       </ul>
-      <button onClick={onNewRound}>Play Again</button>
-    </div>
-  );
-};
-      
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
-        <h3 className="font-semibold text-gray-800 mb-3">Player Choices:</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {players.map((player, index) => {
-            const isWinner = index === winner;
-            const isValid = isValidChoice(index);
-            
-            return (
-              <div 
-                key={index}
-                className={`
-                  flex items-center p-3 rounded-lg
-                  ${isWinner ? 'bg-green-100 border border-green-300' : 
-                    isValid ? 'bg-blue-50 border border-blue-200' : 
-                    'bg-gray-100 border border-gray-200'}
-                `}
-              >
-                {player.name === 'You' ? (
-                  <User className={`h-6 w-6 ${isWinner ? 'text-green-600' : 'text-blue-600'} mr-2`} />
-                ) : (
-                  <Bot className={`h-6 w-6 ${isWinner ? 'text-green-600' : 'text-gray-600'} mr-2`} />
-                )}
-                <div className="flex-1">
-                  <div className="font-medium">{player.name}</div>
-                  <div className="text-sm text-gray-600">
-                    Selected chest {player.choice + 1} ({chestValues[player.choice]} points)
-                  </div>
-                </div>
-                {isWinner && (
-                  <Trophy className="h-6 w-6 text-yellow-500" />
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <div className="mt-4 flex justify-center">
+        <button 
+          className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+          onClick={onNewRound}
+        >
+          Play Again
+        </button>
       </div>
-      
-      <div className="bg-amber-50 p-6 rounded-lg border border-amber-200 mb-6 text-center">
-        {winner === 0 ? (
-          <>
-            <Trophy className="h-10 w-10 text-yellow-500 mx-auto mb-2" />
-            <h3 className="text-xl font-bold text-amber-800">You won!</h3>
-            <p className="text-amber-700">You get {score} points</p>
-          </>
-        ) : winner !== -1 ? (
-          <>
-            <h3 className="text-xl font-bold text-amber-800">{players[winner].name} won!</h3>
-            <p className="text-amber-700">You don't get any points this round</p>
-          </>
-        ) : (
-          <>
-            <h3 className="text-xl font-bold text-amber-800">It's a tie!</h3>
-            <p className="text-amber-700">No one gets points this round</p>
-          </>
-        )}
-      </div>
-      
-      <button
-        onClick={onNewRound}
-        className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow hover:shadow-lg flex items-center justify-center mx-auto"
-      >
-        <RefreshCw className="h-5 w-5 mr-2" />
-        Start New Round
-      </button>
     </div>
   );
 };
