@@ -13,11 +13,12 @@ router.get('/hello', (req, res) => {
 
 // Игровая логика: обработка выбора сундуков
 router.post('/game/play', (req, res) => {
-  const { playerChoice } = req.body;
+  const playerChoice = Number(req.body.playerChoice);
 
-  if (!playerChoice || ![0, 1, 2, 3].includes(playerChoice)) {
-    return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
-  }
+if (!Number.isInteger(playerChoice) || ![1, 2, 3, 4].includes(playerChoice)) {
+  return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
+}
+
 
   // Боты делают выбор случайно
   const botChoices = [
