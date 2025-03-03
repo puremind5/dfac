@@ -36,7 +36,7 @@ router.post('/game/play', (req, res) => {
 
     console.log("Choice counts:", choiceCount);
 
-    // Находим уникальные выборы (сундуки, которые выбраны только одним игроком/ботом)
+    // Определяем уникальные выборы (сундуки, которые выбраны только одним игроком/ботом)
     const uniqueChoices = Object.keys(choiceCount)
       .map(Number)
       .filter(choice => choiceCount[choice] === 1);
@@ -51,11 +51,17 @@ router.post('/game/play', (req, res) => {
 
       console.log("Best unique choice:", bestChoice);
 
-      // Если этот сундук выбрал игрок — он выигрывает
+      // Проверяем, кто выбрал этот сундук
       if (playerChoice === bestChoice) {
         winner = "You";
-        reward = CHEST_VALUES[bestChoice];
+      } else {
+        const botIndex = botChoices.indexOf(bestChoice);
+        if (botIndex !== -1) {
+          winner = `Bot ${botIndex + 1}`;
+        }
       }
+
+      reward = CHEST_VALUES[bestChoice];
     }
 
     res.json({ success: true, playerChoice, botChoices, winner, reward });
