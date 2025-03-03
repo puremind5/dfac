@@ -15,32 +15,28 @@ interface ResultsPanelProps {
   onNewRound: () => void;
 }
 
-const ResultsPanel: React.FC<ResultsPanelProps> = ({ results, onNewRound }) => {
-  if (!results) return null;
-  
-  const { players, chestValues, winner, score, validChests } = results;
-  
-  const isValidChoice = (playerIndex: number) => {
-    return Object.keys(validChests).includes(playerIndex.toString());
-  };
-  
+const ResultsPanel = ({ results, onNewRound }) => {
+  console.log("Received results in ResultsPanel:", results); // Логируем данные
+
+  // Проверяем, что results существует и содержит массив results.results
+  if (!results || !Array.isArray(results.results)) {
+    return <div className="text-center text-red-500">Error: No valid results</div>;
+  }
+
   return (
-    <div className="text-center">
-      <h2 className="text-2xl font-semibold mb-6">Round Results</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        {chestValues.map((value, index) => (
-          <div 
-            key={index}
-            className="bg-gradient-to-b from-amber-700 to-amber-900 rounded-lg p-4 text-center"
-          >
-            <Treasure className="h-12 w-12 mx-auto text-yellow-400 mb-2" />
-            <div className="bg-amber-800 w-full h-2 rounded-full mt-1"></div>
-            <div className="mt-3 font-bold text-white">Chest {index + 1}</div>
-            <div className="text-yellow-300 font-bold text-xl">{value} points</div>
-          </div>
+    <div>
+      <h2 className="text-xl font-bold mb-4">Game Results</h2>
+      <ul>
+        {results.results.map((result, index) => (
+          <li key={index}>
+            {result.player} chose chest {result.choice} and scored {result.points} points
+          </li>
         ))}
-      </div>
+      </ul>
+      <button onClick={onNewRound}>Play Again</button>
+    </div>
+  );
+};
       
       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
         <h3 className="font-semibold text-gray-800 mb-3">Player Choices:</h3>
