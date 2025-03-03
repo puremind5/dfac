@@ -58,3 +58,4 @@ router.post('/game/play', (req, res) => {
 app.use('/api', router);
 
 module.exports.handler = serverless(app);
+export default GameBoard;
