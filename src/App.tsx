@@ -3,6 +3,7 @@ import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
 
 const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 };
+const GAME_COST = 20; // 💰 Стоимость каждой игры
 
 function App() {
   const [results, setResults] = useState<any>(null);
@@ -12,10 +13,10 @@ function App() {
 
   // 🌟 Сохраняем золото для игрока и ботов
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
-    You: 0,
-    "Bot 1": 0,
-    "Bot 2": 0,
-    "Bot 3": 0,
+    You: 100, // Начальный баланс игрока
+    "Bot 1": 100, // Начальный баланс ботов
+    "Bot 2": 100,
+    "Bot 3": 100,
   });
 
   const handleChestSelect = async (chestIndex: number) => {
@@ -25,6 +26,15 @@ function App() {
       setLoading(true);
       setError(null);
       setGameActive(false);
+
+      // 💰 Вычитаем стоимость игры у всех игроков (игрока и ботов)
+      setTotalGold(prevGold => ({
+        ...prevGold,
+        You: prevGold["You"] - GAME_COST,
+        "Bot 1": prevGold["Bot 1"] - GAME_COST,
+        "Bot 2": prevGold["Bot 2"] - GAME_COST,
+        "Bot 3": prevGold["Bot 3"] - GAME_COST,
+      }));
 
       const response = await fetch('/api/game/play', {
         method: 'POST',
@@ -81,20 +91,6 @@ function App() {
           </div>
         )}
 
-        {/* Описание игры */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
-          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
-          <ul className="text-sm space-y-1 text-gray-700">
-            <li>• Вы играете против 3 ботов</li>
-            <li>• В каждом сундуке разное количество золота: 10, 20, 50 или 100 монет</li>
-            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
-            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
-          </ul>
-        </div>
-
-        {/* Игровая доска (сундуки остаются видимыми, но отключаются после выбора) */}
-        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
-
         {/* 🌟 Общий счёт + результаты текущего раунда в одном блоке */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
           {/* Левая колонка: Общий счёт */}
@@ -102,7 +98,9 @@ function App() {
             <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
             <ul className="text-sm text-gray-700">
               {Object.entries(totalGold).map(([player, gold]) => (
-                <li key={player} className="py-1">{player}: {gold} монет</li>
+                <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
+                  {player}: {gold} монет
+                </li>
               ))}
             </ul>
           </div>
