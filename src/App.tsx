@@ -14,9 +14,9 @@ function App() {
   // 🌟 Сохраняем золото для игрока и ботов
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
     You: 100, // Начальный баланс игрока
-    "Bot 1": 100, // Начальный баланс ботов
-    "Bot 2": 100,
-    "Bot 3": 100,
+    "Bot 1": 0,
+    "Bot 2": 0,
+    "Bot 3": 0,
   });
 
   const handleChestSelect = async (chestIndex: number) => {
@@ -27,13 +27,10 @@ function App() {
       setError(null);
       setGameActive(false);
 
-      // 💰 Вычитаем стоимость игры у всех игроков (игрока и ботов)
+      // 💰 Вычитаем стоимость игры перед отправкой запроса
       setTotalGold(prevGold => ({
         ...prevGold,
         You: prevGold["You"] - GAME_COST,
-        "Bot 1": prevGold["Bot 1"] - GAME_COST,
-        "Bot 2": prevGold["Bot 2"] - GAME_COST,
-        "Bot 3": prevGold["Bot 3"] - GAME_COST,
       }));
 
       const response = await fetch('/api/game/play', {
