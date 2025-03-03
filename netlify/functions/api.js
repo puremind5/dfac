@@ -6,6 +6,11 @@ app.use(express.json());
 
 const router = express.Router();
 
+router.get('/game/play', (req, res) => {
+  res.json({ message: "Game API is working! Use POST to play." });
+});
+
+
 router.post('/game/play', (req, res) => {
   try {
     console.log("Received request body:", req.body);
