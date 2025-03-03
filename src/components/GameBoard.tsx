@@ -1,40 +1,60 @@
-import React from 'react';
+const express = require('express');
+const serverless = require('serverless-http');
 
-const CHEST_VALUES = [10, 20, 50, 100]; // Ценности сундуков (исправлено 40 → 50)
+const app = express();
+app.use(express.json());
 
-const GameBoard = ({ onChestSelect, loading }) => {
-  return (
-    <div className="text-center">
-      <h2 className="text-2xl font-bold mb-4 text-white">Choose a Treasure Chest</h2>
+const router = express.Router();
 
-      {/* Описание правил игры */}
-      <div className="bg-gray-800 text-white p-4 rounded-lg shadow-lg mb-4">
-        <h3 className="text-lg font-bold mb-2">How to Play:</h3>
-        <ul className="text-sm space-y-1">
-          <li>• You play against 3 bots</li>
-          <li>• Each chest has a different value: 10, 20, 50, or 100 points</li>
-          <li>• If only you choose the most valuable chest, you get the points</li>
-          <li>• If multiple players choose the same chest, no one gets points for it</li>
-        </ul>
-      </div>
+const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 }; // Количество золота в сундуках
 
-      {/* Сундуки с ценностью */}
-      <div className="grid grid-cols-4 gap-4 justify-center">
-        {CHEST_VALUES.map((value, index) => (
-          <button
-            key={index}
-            className="p-4 border-4 border-yellow-500 bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold text-lg rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105"
-            onClick={() => onChestSelect(index)}
-            disabled={loading}
-          >
-            💰 {value} Gold
-          </button>
-        ))}
-      </div>
+router.post('/game/play', (req, res) => {
+  try {
+    console.log("Received request body:", req.body);
 
-      {loading && <p className="mt-4 text-gray-300">Opening chest...</p>}
-    </div>
-  );
-};
+    const playerChoice = Number(req.body.playerChoice);
+    console.log("Parsed playerChoice:", playerChoice, "Type:", typeof playerChoice);
 
-export default GameBoard;
+    if (![1, 2, 3, 4].includes(playerChoice)) {
+      console.error("Error: Invalid choice");
+      return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
+    }
+
+    // Боты выбирают сундуки случайно
+    const botChoices = [
+      Math.ceil(Math.random() * 4),
+      Math.ceil(Math.random() * 4),
+      Math.ceil(Math.random() * 4),
+    ];
+
+    const allChoices = [playerChoice, ...botChoices];
+
+    // Определяем победителя: если игрок выбрал уникальный самый ценный сундук
+    const uniqueChoices = allChoices.filter(
+      (choice, _, arr) => arr.indexOf(choice) === arr.lastIndexOf(choice)
+    );
+
+    let winner = null;
+    let reward = 0;
+
+    if (uniqueChoices.includes(playerChoice)) {
+      winner = "You";
+      reward = CHEST_VALUES[playerChoice]; // Теперь награда = золото в сундуке
+    }
+
+    res.json({
+      success: true,
+      playerChoice,
+      botChoices,
+      winner: winner || "No winner",
+      reward, // Отправляем точное количество золота как награду
+    });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.use('/api', router);
+
+module.exports.handler = serverless(app);
