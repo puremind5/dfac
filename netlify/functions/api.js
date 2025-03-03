@@ -15,7 +15,7 @@ router.get('/hello', (req, res) => {
 router.post('/game/play', (req, res) => {
   const { playerChoice } = req.body;
 
-  if (!playerChoice || ![1, 2, 3, 4].includes(playerChoice)) {
+  if (!playerChoice || ![0, 1, 2, 3].includes(playerChoice)) {
     return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
   }
 
