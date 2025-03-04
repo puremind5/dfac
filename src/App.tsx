@@ -131,7 +131,7 @@ function App() {
           </ul>
         </div>
 
-        {/* 🎯 Игровая доска */}
+                {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
         {/* 🌟 Банк */}
@@ -142,6 +142,7 @@ function App() {
 
         {/* 🌟 Общий счёт + текущий раунд (как было) */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
+          {/* Общий счёт (слева) */}
           <div className="text-center">
             <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
             <ul className="text-sm text-gray-700">
@@ -150,6 +151,38 @@ function App() {
                   {player}: {gold} монет {bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Текущий раунд (справа) */}
+          {results && (
+            <div className="text-center">
+              <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
+              <p className="text-lg font-semibold">
+                {results.winner !== "No winner" ? `🏆 ${results.winner} выиграл ${results.reward} монет!` : "Никто не выиграл."}
+              </p>
+              <ul className="text-sm text-gray-700 mt-2">
+                <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
+                {results.botChoices.map((choice: number, index: number) => (
+                  <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* 🌟 Кнопка "Играть снова" по центру внизу */}
+        {results && (
+          <div className="flex justify-center mt-4">
+            <button 
+              className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+              onClick={startNewRound}
+            >
+              Играть снова
+            </button>
+          </div>
+        )}
+
             </ul>
           </div>
         </div>
