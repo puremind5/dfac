@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
-import Confetti from 'react-confetti';
 import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
-import { useWindowSize } from 'react-use';
 
 const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 };
 const GAME_COST = 20; // 💰 Стоимость каждой игры
 
 function App() {
-  const { width, height } = useWindowSize(); // Получаем размеры экрана для конфетти
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState<boolean>(true);
-  const [showConfetti, setShowConfetti] = useState<boolean>(false); // 🎉 Флаг для показа конфетти
 
   // 🌟 Сохраняем золото для игрока и ботов
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
@@ -58,25 +54,11 @@ function App() {
 
       setResults(data);
 
-      // 🌟 Если игрок выиграл, запускаем конфетти и обновляем золото
-      if (data.winner === "You") {
-        setShowConfetti(true); // 🎉 Показываем конфетти
-        setTimeout(() => setShowConfetti(false), 3000); // Через 3 секунды убираем конфетти
-
-        setTotalGold(prevGold => ({
-          ...prevGold,
-          You: prevGold["You"] + data.reward,
-        }));
-      }
-
-      // Если выиграл бот, обновляем его золото
-      if (data.winner.includes("Bot")) {
-        setTotalGold(prevGold => ({
-          ...prevGold,
-          [data.winner]: prevGold[data.winner] + data.reward,
-        }));
-      }
-
+      // 🌟 Если кто-то выиграл, добавляем золото к его общему счёту
+      setTotalGold(prevGold => ({
+        ...prevGold,
+        [data.winner]: data.winner !== "No winner" ? (prevGold[data.winner] || 0) + data.reward : prevGold[data.winner],
+      }));
     } catch (err) {
       setError('Failed to connect to the game server');
       console.error("Fetch error:", err);
@@ -92,8 +74,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 flex flex-col items-center justify-center p-4">
-      {showConfetti && <Confetti width={width} height={height} />} {/* 🎉 Конфетти */}
-
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden p-6">
         <div className="bg-gradient-to-r from-amber-500 to-yellow-500 p-6">
           <div className="flex items-center justify-center">
@@ -147,6 +127,12 @@ function App() {
                     : results.winner.includes("Bot") ? `🤖 ${results.winner} выиграл ${results.reward} золота!` 
                     : "Никто не выиграл в этом раунде."}
                 </p>
+                <ul className="text-sm text-gray-700 mt-2">
+                  <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
+                  {results.botChoices.map((choice: number, index: number) => (
+                    <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+                  ))}
+                </ul>
                 <button 
                   className="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
                   onClick={startNewRound}
@@ -166,4 +152,3 @@ function App() {
 }
 
 export default App;
-
