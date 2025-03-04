@@ -142,7 +142,7 @@ function App() {
         </div>
 
         {/* 🌟 Общий счёт + текущий раунд (как было) */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Общий счёт (слева) */}
           <div className="text-center">
             <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
