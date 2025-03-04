@@ -6,7 +6,8 @@ app.use(express.json());
 
 const router = express.Router();
 
-const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 }; // Теперь сундуки от 1 до 4
+// 🌟 Исправленные значения сундуков
+const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 
 router.post('/game/play', (req, res) => {
   try {
@@ -19,7 +20,7 @@ router.post('/game/play', (req, res) => {
       return res.status(400).json({ error: 'Invalid choice. Choose a chest from 1 to 4.' });
     }
 
-    // Боты делают случайный выбор сундуков (от 1 до 4)
+    // Боты делают случайный выбор сундуков (1-4)
     const botChoices = [
       Math.ceil(Math.random() * 4),
       Math.ceil(Math.random() * 4),
@@ -36,7 +37,7 @@ router.post('/game/play', (req, res) => {
 
     console.log("Choice counts:", choiceCount);
 
-    // Определяем уникальные выборы
+    // Определяем уникальные выборы (сундуки, которые выбраны только одним игроком/ботом)
     const uniqueChoices = Object.keys(choiceCount)
       .map(Number)
       .filter(choice => choiceCount[choice] === 1);
