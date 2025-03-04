@@ -119,57 +119,12 @@ function App() {
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        {/* 🌟 Описание игры */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
+          <ul className="text-sm space-y-1 text-gray-700">
+            <li>• Вы играете против 3 ботов</li>
+            <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
+            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
+            <li>• Если несколько игрок
 
-        {/* 🎯 Игровая доска */}
-        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
-
-        {/* 🌟 Общий счёт + текущий раунд (как было) */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
-          {/* Левая колонка: Общий счёт */}
-          <div className="text-center">
-            <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
-            <ul className="text-sm text-gray-700">
-              {Object.entries(totalGold).map(([player, gold]) => (
-                <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
-                  {player}: {gold} монет {bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Правая колонка: Текущий раунд */}
-          {results && (
-            <div className="text-center">
-              <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
-              <p className="text-lg font-semibold">
-                {results.winner === "You" ? `🎉 Вы выиграли ${results.reward} золота! 💰` 
-                  : results.winner.includes("Bot") ? `🤖 ${results.winner} выиграл ${results.reward} золота!` 
-                  : "Никто не выиграл в этом раунде."}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Кнопка "Играть снова" в центре */}
-        {results && (
-          <div className="flex justify-center mt-4">
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
-              onClick={startNewRound}
-            >
-              Играть снова
-            </button>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
-
-export default App;
