@@ -146,8 +146,8 @@ function App() {
           {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
         </div>
 
-        {/* 🌟 Общий счёт и результаты внизу */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
+        {/* 🌟 Общий счёт и результаты */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md text-center">
           <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
           <ul className="text-sm text-gray-700">
             {Object.entries(totalGold).map(([player, gold]) => (
@@ -156,11 +156,19 @@ function App() {
               </li>
             ))}
           </ul>
+          {results && (
+            <button 
+              className="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+              onClick={startNewRound}
+            >
+              Играть снова
+            </button>
+          )}
         </div>
+
       </div>
     </div>
   );
 }
 
 export default App;
-
