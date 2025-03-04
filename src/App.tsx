@@ -127,7 +127,7 @@ function App() {
         <div className="bg-gradient-to-r from-amber-500 to-yellow-500 p-6">
           <div className="flex items-center justify-center">
             <Treasure className="h-10 w-10 text-yellow-100 mr-3" />
-            <h1 className="text-3xl font-bold text-white">Охота за сокровищами</h1>
+             <h1 className="text-xl md:text-3xl font-bold text-white whitespace-nowrap">Охота за сокровищами</h1>
              {/* 🌟 Заголовок перед игровым полем */}
         </div>
        </div>
