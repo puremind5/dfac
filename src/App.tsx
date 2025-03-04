@@ -131,7 +131,7 @@ function App() {
              {/* 🌟 Заголовок перед игровым полем */}<br />
             <h2 className="text-2xl font-bold text-center text-white mt-6">Выбери сундук</h2>
         </div>
-       
+       </div>
         
                 {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
