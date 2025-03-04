@@ -128,10 +128,11 @@ function App() {
           <div className="flex items-center justify-center">
             <Treasure className="h-10 w-10 text-yellow-100 mr-3" />
             <h1 className="text-3xl font-bold text-white">Охота за сокровищами</h1>
+             {/* 🌟 Заголовок перед игровым полем */}
+        <h2 className="text-2xl font-bold text-center text-white mt-6">Выбери сундук</h2>
           </div>
         </div>
-        {/* 🌟 Заголовок перед игровым полем */}
-        <h2 className="text-2xl font-bold text-center text-white mt-6">Выбери сундук</h2>
+       
         
                 {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
