@@ -126,5 +126,38 @@ function App() {
             <li>• Вы играете против 3 ботов</li>
             <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
             <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
-            <li>• Если несколько игрок
+            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
+            <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
+          </ul>
+        </div>
+
+        {/* 🎯 Игровая доска */}
+        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+
+        {/* 🌟 Банк */}
+        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
+          <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
+          {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        </div>
+
+        {/* 🌟 Общий счёт + текущий раунд (как было) */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
+          <div className="text-center">
+            <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
+            <ul className="text-sm text-gray-700">
+              {Object.entries(totalGold).map(([player, gold]) => (
+                <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
+                  {player}: {gold} монет {bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
 
