@@ -6,7 +6,7 @@ const CHEST_VALUES = [35, 50, 70, 100];
 const GameBoard: React.FC<{ onChestSelect: (index: number) => void; loading: boolean }> = ({ onChestSelect, loading }) => {
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-bold mb-4 text-white">Выберите сундук</h2>
+      <h2 className="text-2xl font-bold mb-4 text-black">Выберите сундук</h2>
 
       <div className="grid grid-cols-4 gap-4 justify-center">
         {CHEST_VALUES.map((value, index) => (
