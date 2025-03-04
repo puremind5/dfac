@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
 
-const CHEST_VALUES = { 1: 10, 2: 20, 3: 50, 4: 100 };
-const GAME_COST = 20; // 💰 Стоимость каждой игры
+const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
+const GAME_COST = 25; // 💰 Стоимость каждой игры
+const BANK_THRESHOLD = 100; // 📌 Порог банка для активации победной серии
 
 function App() {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState<boolean>(true);
+  const [bank, setBank] = useState<number>(0); // 🌟 БАНК
+  const [winStreak, setWinStreak] = useState<{ [key: string]: number }>({
+    You: 0,
+    "Bot 1": 0,
+    "Bot 2": 0,
+    "Bot 3": 0,
+  });
 
-  // 🌟 Сохраняем золото для игрока и ботов
+  // 🌟 Баланс игроков
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
-    You: 100, // Начальный баланс игрока
+    You: 100,
     "Bot 1": 100,
     "Bot 2": 100,
     "Bot 3": 100,
@@ -27,7 +35,7 @@ function App() {
       setError(null);
       setGameActive(false);
 
-      // 💰 Вычитаем стоимость игры у всех игроков (игрока и ботов)
+      // 💰 Все игроки платят за вход в игру (100 монет суммарно)
       setTotalGold(prevGold => ({
         You: prevGold["You"] - GAME_COST,
         "Bot 1": prevGold["Bot 1"] - GAME_COST,
@@ -54,11 +62,40 @@ function App() {
 
       setResults(data);
 
-      // 🌟 Если кто-то выиграл, добавляем золото к его общему счёту
-      setTotalGold(prevGold => ({
-        ...prevGold,
-        [data.winner]: data.winner !== "No winner" ? (prevGold[data.winner] || 0) + data.reward : prevGold[data.winner],
-      }));
+      const totalCollected = 100; // 4 игрока по 25 монет
+      let totalPaidOut = data.winner !== "No winner" ? data.reward : 0;
+
+      // 🌟 Если кто-то выиграл, добавляем золото к его балансу
+      if (data.winner !== "No winner") {
+        setTotalGold(prevGold => ({
+          ...prevGold,
+          [data.winner]: (prevGold[data.winner] || 0) + data.reward,
+        }));
+
+        // 📌 Увеличиваем серию побед ТОЛЬКО если банк достиг 100 монет
+        setWinStreak(prevStreak => ({
+          ...prevStreak,
+          [data.winner]: bank >= BANK_THRESHOLD ? (prevStreak[data.winner] || 0) + 1 : 0,
+        }));
+
+        // 🏆 Если банк ≥ 100 и игрок/бот выиграл 3 раза подряд – он забирает банк
+        if (bank >= BANK_THRESHOLD && winStreak[data.winner] + 1 === 3) {
+          setTotalGold(prevGold => ({
+            ...prevGold,
+            [data.winner]: prevGold[data.winner] + bank,
+          }));
+          setBank(0); // 🔥 БАНК очищается после выигрыша
+        }
+      } else {
+        setWinStreak({ You: 0, "Bot 1": 0, "Bot 2": 0, "Bot 3": 0 }); // ❌ Победная серия сбрасывается
+      }
+
+      // 📌 В банк отправляется ТОЛЬКО неразыгранные монеты
+      const leftover = totalCollected - totalPaidOut;
+      if (leftover > 0) {
+        setBank(prevBank => prevBank + leftover);
+      }
+
     } catch (err) {
       setError('Failed to connect to the game server');
       console.error("Fetch error:", err);
@@ -88,64 +125,26 @@ function App() {
           </div>
         )}
 
-        {/* 🌟 Описание игры */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
-          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
-          <ul className="text-sm space-y-1 text-gray-700">
-            <li>• Вы играете против 3 ботов</li>
-            <li>• В каждом сундуке разное количество золота: 10, 20, 50 или 100 монет</li>
-            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
-            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
-            <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
-          </ul>
+        {/* 🌟 Банк */}
+        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
+          <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
+          {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
         </div>
 
         {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
-        {/* 🌟 Общий счёт + результаты текущего раунда в одном блоке */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-2 gap-4">
-          {/* Левая колонка: Общий счёт */}
-          <div className="text-center">
-            <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
-            <ul className="text-sm text-gray-700">
-              {Object.entries(totalGold).map(([player, gold]) => (
-                <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
-                  {player}: {gold} монет
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Правая колонка: Результаты текущей игры */}
-          <div className="text-center">
-            <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
-            {results ? (
-              <>
-                <p className="text-lg font-semibold">
-                  {results.winner === "You" ? `🎉 Вы выиграли ${results.reward} золота! 💰` 
-                    : results.winner.includes("Bot") ? `🤖 ${results.winner} выиграл ${results.reward} золота!` 
-                    : "Никто не выиграл в этом раунде."}
-                </p>
-                <ul className="text-sm text-gray-700 mt-2">
-                  <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
-                  {results.botChoices.map((choice: number, index: number) => (
-                    <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
-                  ))}
-                </ul>
-                <button 
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
-                  onClick={startNewRound}
-                >
-                  Играть снова
-                </button>
-              </>
-            ) : (
-              <p className="text-gray-500">Выберите сундук, чтобы начать игру</p>
-            )}
-          </div>
+        {/* 🌟 Общий счёт */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
+          <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
+          <ul className="text-sm text-gray-700">
+            {Object.entries(totalGold).map(([player, gold]) => (
+              <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
+                {player}: {gold} монет {bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
+              </li>
+            ))}
+          </ul>
         </div>
-
       </div>
     </div>
   );
