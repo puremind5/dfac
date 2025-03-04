@@ -4,7 +4,7 @@ import GameBoard from './components/GameBoard';
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 const GAME_COST = 25; // 💰 Стоимость каждой игры
-const BANK_THRESHOLD = 100; // 📌 Порог банка для активации победной серии
+const BANK_THRESHOLD = 100; // 📌 Порог банка для розыгрыша
 
 function App() {
   const [results, setResults] = useState<any>(null);
@@ -78,7 +78,7 @@ function App() {
           [data.winner]: bank >= BANK_THRESHOLD ? (prevStreak[data.winner] || 0) + 1 : 0,
         }));
 
-        // 🏆 Если банк ≥ 100 и игрок/бот выиграл 3 раза подряд – он забирает банк
+        // 🏆 Если игрок выиграл 3 раза подряд – он забирает БАНК
         if (bank >= BANK_THRESHOLD && winStreak[data.winner] + 1 === 3) {
           setTotalGold(prevGold => ({
             ...prevGold,
@@ -125,16 +125,28 @@ function App() {
           </div>
         )}
 
-        {/* 🌟 Банк */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
-          <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
-          {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        {/* 🌟 Описание игры */}
+        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md min-h-[150px] flex flex-col justify-center">
+          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
+          <ul className="text-sm space-y-1 text-gray-700">
+            <li>• Вы играете против 3 ботов</li>
+            <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
+            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
+            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
+            <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
+          </ul>
         </div>
 
         {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
 
-        {/* 🌟 Общий счёт */}
+        {/* 🌟 Банк теперь между счетом и результатами */}
+        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
+          <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
+          {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        </div>
+
+        {/* 🌟 Общий счёт и результаты внизу */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
           <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
           <ul className="text-sm text-gray-700">
@@ -151,3 +163,4 @@ function App() {
 }
 
 export default App;
+
