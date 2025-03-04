@@ -28,81 +28,93 @@ function App() {
   });
 
   const handleChestSelect = async (chestIndex: number) => {
-    if (!gameActive) return;
+  if (!gameActive) return;
 
-    try {
-      setLoading(true);
-      setError(null);
-      setGameActive(false);
+  try {
+    setLoading(true);
+    setError(null);
+    setGameActive(false);
 
-      // 💰 Все игроки платят за вход в игру (100 монет суммарно)
+    // 💰 Все игроки платят за вход в игру (100 монет суммарно)
+    setTotalGold(prevGold => ({
+      You: prevGold["You"] - GAME_COST,
+      "Bot 1": prevGold["Bot 1"] - GAME_COST,
+      "Bot 2": prevGold["Bot 2"] - GAME_COST,
+      "Bot 3": prevGold["Bot 3"] - GAME_COST,
+    }));
+
+    const response = await fetch('/api/game/play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerChoice: chestIndex }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("API Response in App.tsx:", data);
+
+    if (!data || typeof data !== 'object' || !('winner' in data)) {
+      throw new Error("Invalid response format");
+    }
+
+    setResults(data);
+
+    const totalCollected = 100; // 4 игрока по 25 монет
+    let totalPaidOut = data.winner !== "No winner" ? data.reward : 0;
+
+    // 🌟 Если кто-то выиграл, добавляем золото к его балансу
+    if (data.winner !== "No winner") {
       setTotalGold(prevGold => ({
-        You: prevGold["You"] - GAME_COST,
-        "Bot 1": prevGold["Bot 1"] - GAME_COST,
-        "Bot 2": prevGold["Bot 2"] - GAME_COST,
-        "Bot 3": prevGold["Bot 3"] - GAME_COST,
+        ...prevGold,
+        [data.winner]: (prevGold[data.winner] || 0) + data.reward,
       }));
 
-      const response = await fetch('/api/game/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerChoice: chestIndex }),
-      });
+      // ✅ Увеличиваем серию побед только у победителя
+      setWinStreak(prevStreak => ({
+        ...prevStreak,
+        [data.winner]: bank >= BANK_THRESHOLD ? (prevStreak[data.winner] || 0) + 1 : 0,
+      }));
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("API Response in App.tsx:", data);
-
-      if (!data || typeof data !== 'object' || !('winner' in data)) {
-        throw new Error("Invalid response format");
-      }
-
-      setResults(data);
-
-      const totalCollected = 100; // 4 игрока по 25 монет
-      let totalPaidOut = data.winner !== "No winner" ? data.reward : 0;
-
-      // 🌟 Если кто-то выиграл, добавляем золото к его балансу
-      if (data.winner !== "No winner") {
+      // 🏆 Если игрок выиграл 3 раза подряд – он забирает БАНК
+      if (bank >= BANK_THRESHOLD && winStreak[data.winner] + 1 === 3) {
         setTotalGold(prevGold => ({
           ...prevGold,
-          [data.winner]: (prevGold[data.winner] || 0) + data.reward,
+          [data.winner]: prevGold[data.winner] + bank,
         }));
-
-        // 📌 Увеличиваем серию побед ТОЛЬКО если банк достиг 100 монет
-        setWinStreak(prevStreak => ({
-          ...prevStreak,
-          [data.winner]: bank >= BANK_THRESHOLD ? (prevStreak[data.winner] || 0) + 1 : 0,
-        }));
-
-        // 🏆 Если игрок выиграл 3 раза подряд – он забирает БАНК
-        if (bank >= BANK_THRESHOLD && winStreak[data.winner] + 1 === 3) {
-          setTotalGold(prevGold => ({
-            ...prevGold,
-            [data.winner]: prevGold[data.winner] + bank,
-          }));
-          setBank(0); // 🔥 БАНК очищается после выигрыша
-        }
-      } else {
-        setWinStreak({ You: 0, "Bot 1": 0, "Bot 2": 0, "Bot 3": 0 }); // ❌ Победная серия сбрасывается
+        setBank(0); // 🔥 БАНК очищается после выигрыша
       }
 
-      // 📌 В банк отправляется ТОЛЬКО неразыгранные монеты
-      const leftover = totalCollected - totalPaidOut;
-      if (leftover > 0) {
-        setBank(prevBank => prevBank + leftover);
-      }
+      // ❌ Проигравшие сбрасывают серию побед
+      setWinStreak(prevStreak => {
+        let updatedStreak = { ...prevStreak };
+        Object.keys(updatedStreak).forEach(player => {
+          if (player !== data.winner) {
+            updatedStreak[player] = 0;
+          }
+        });
+        return updatedStreak;
+      });
 
-    } catch (err) {
-      setError('Failed to connect to the game server');
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
+    } else {
+      setWinStreak({ You: 0, "Bot 1": 0, "Bot 2": 0, "Bot 3": 0 }); // ❌ Если никто не выиграл, сбросить ВСЕ серии
     }
-  };
+
+    // 📌 В банк отправляется ТОЛЬКО неразыгранные монеты
+    const leftover = totalCollected - totalPaidOut;
+    if (leftover > 0) {
+      setBank(prevBank => prevBank + leftover);
+    }
+
+  } catch (err) {
+    setError('Failed to connect to the game server');
+    console.error("Fetch error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const startNewRound = () => {
     setResults(null);
