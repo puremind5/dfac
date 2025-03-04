@@ -134,6 +134,17 @@ function App() {
         
                 {/* 🎯 Игровая доска */}
         <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+       
+        {results && (
+          <div className="flex justify-center mt-6">
+            <button 
+            className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+            onClick={startNewRound}
+            >
+            🔄 Играть снова
+            </button>
+          </div>
+          )}
 
         {/* 🌟 Банк */}
         <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
@@ -175,17 +186,6 @@ function App() {
           )}
         </div>
 
-        {/* 🌟 Кнопка "Играть снова" по центру внизу */}
-        {results && (
-          <div className="flex justify-center mt-4">
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
-              onClick={startNewRound}
-            >
-              Играть снова
-            </button>
-          </div>
-        )}
       {/* 🌟 Описание игры (теперь внизу) */}
         <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
           <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
