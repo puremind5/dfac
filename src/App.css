@@ -1,0 +1,45 @@
+/* Базовые стили для приложения */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Анимация для пульсации */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 1s infinite;
+}
+
+/* Стили для кнопок */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Стили для сундуков */
+.chest-button {
+  transition: all 0.3s ease;
+}
+
+.chest-button:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+/* Стили для игроков */
+.player-card {
+  transition: all 0.3s ease;
+}
+
+.player-card.winner {
+  animation: pulse 1s infinite;
+} 

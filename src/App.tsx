@@ -3,6 +3,9 @@ import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
 import BankGame from './BankGame';
 import ThreePlayersGame from './ThreePlayersGame';
+import Players from './components/Players';
+import axios from 'axios';
+import './App.css';
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 const GAME_COST = 25; // 💰 Стоимость каждой игры
@@ -30,6 +33,13 @@ function App() {
   });
 
   const [gameVersion, setGameVersion] = useState<'original' | 'bank' | 'three-players'>('original');
+  const [timeLeft, setTimeLeft] = useState(10); // Добавляем время для таймера
+  const [playersMadeChoice, setPlayersMadeChoice] = useState<Record<string, boolean>>({
+    'You': false,
+    'Bot 1': false,
+    'Bot 2': false,
+    'Bot 3': false
+  });
 
   // Для отладки: делаем состояние глобально доступным
   // (только для разработки, не использовать в продакшене)
@@ -193,6 +203,9 @@ function App() {
           <>
             {/* 🎯 Оригинальная игровая доска */}
             <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+            
+            {/* Добавляем компонент Players */}
+            <Players results={results} timeLeft={timeLeft} gameActive={gameActive} playersMadeChoice={playersMadeChoice} />
             
             {results && (
               <div className="flex justify-center mt-6">
