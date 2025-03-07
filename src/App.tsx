@@ -151,6 +151,9 @@ function App() {
     // Ценность сундуков (индекс + 1 = номер сундука)
     const chestValues = [35, 50, 70, 100];
     
+    // Имена ботов
+    const botNames = ['Алиса', 'Олег', 'Сири'];
+    
     // Собираем все выборы в один массив
     const allChoices = [...botChoices];
     
@@ -167,7 +170,7 @@ function App() {
     
     // Добавляем выборы ботов
     botChoices.forEach((choice, index) => {
-      choiceMap[choice].push(`Bot ${index + 1}`);
+      choiceMap[choice].push(botNames[index]);
     });
     
     console.log('Карта выборов:', choiceMap);
