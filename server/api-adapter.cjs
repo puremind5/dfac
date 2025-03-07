@@ -59,13 +59,17 @@ try {
             // Кто выбрал этот сундук?
             if (playerChoice === bestChoice) {
               winner = "You";
+              reward = CHEST_VALUES[bestChoice];
             } else {
               const botIndex = botChoices.indexOf(bestChoice);
               if (botIndex !== -1) {
                 winner = `Bot ${botIndex + 1}`;
+                reward = CHEST_VALUES[bestChoice];
               }
             }
             
+            // Остаток монет уходит в БАНК
+            const remainingGold = 100 - CHEST_VALUES[bestChoice];
             reward = CHEST_VALUES[bestChoice];
           }
           

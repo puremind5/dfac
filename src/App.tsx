@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
+import BankGame from './BankGame';
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 const GAME_COST = 25; // 💰 Стоимость каждой игры
@@ -26,6 +27,8 @@ function App() {
     "Bot 2": 100,
     "Bot 3": 100,
   });
+
+  const [gameVersion, setGameVersion] = useState<'original' | 'bank'>('original');
 
   // Для отладки: делаем состояние глобально доступным
   // (только для разработки, не использовать в продакшене)
@@ -160,79 +163,99 @@ function App() {
             <Treasure className="h-10 w-10 text-yellow-100 mr-3" />
              <h1 className="text-xl md:text-3xl font-bold text-white whitespace-nowrap">Охота за сокровищами</h1>
              {/* 🌟 Заголовок перед игровым полем */}
+          </div>
         </div>
-       </div>
         
-                {/* 🎯 Игровая доска */}
-        <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
-       
-        {results && (
-          <div className="flex justify-center mt-6">
-            <button 
-            className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
-            onClick={startNewRound}
-            >
-            🔄 Играть снова
-            </button>
-          </div>
-          )}
-
-        {/* 🌟 Банк */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
-          <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
-          {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        {/* Переключатель версий игры */}
+        <div className="flex justify-center mt-4 mb-4">
+          <button 
+            className={`px-4 py-2 rounded-l-lg ${gameVersion === 'original' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setGameVersion('original')}
+          >
+            Оригинальная игра
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-r-lg ${gameVersion === 'bank' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setGameVersion('bank')}
+          >
+            Игра с БАНКОМ
+          </button>
         </div>
-
-        {/* 🌟 Общий счёт + текущий раунд (как было) */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Общий счёт (слева) */}
-          <div className="text-center">
-            <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
-
-            <ul className="text-sm text-gray-700">
-              {Object.entries(totalGold).map(([player, gold]) => (
-              <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
-              {player}: {gold} монет{" "}
-              {winStreak[player] >= 3 ? "🔥🔥🔥" : winStreak[player] === 2 ? "🔥🔥" : bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
-              </li>
-             ))}
-            </ul>
+        
+        {gameVersion === 'original' ? (
+          <>
+            {/* 🎯 Оригинальная игровая доска */}
+            <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
             
-          </div>
+            {results && (
+              <div className="flex justify-center mt-6">
+                <button 
+                className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
+                onClick={startNewRound}
+                >
+                🔄 Играть снова
+                </button>
+              </div>
+            )}
 
-          {/* Текущий раунд (справа) */}
-          {results && (
-            <div className="text-center">
-              <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
-              <p className="text-lg font-semibold">
-                {results.winner !== "No winner" ? `🏆 ${results.winner} выиграл ${results.reward} монет!` : "Никто не выиграл."}
-              </p>
-              <ul className="text-sm text-gray-700 mt-2">
-                <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
-                {results.botChoices.map((choice: number, index: number) => (
-                  <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+            {/* 🌟 Банк */}
+            <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
+              <h2 className="text-lg font-bold">🏦 Банк: {bank} монет</h2>
+              {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+            </div>
+
+            {/* 🌟 Общий счёт + текущий раунд (как было) */}
+            <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Общий счёт (слева) */}
+              <div className="text-center">
+                <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
+
+                <ul className="text-sm text-gray-700">
+                  {Object.entries(totalGold).map(([player, gold]) => (
+                  <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
+                  {player}: {gold} монет{" "}
+                  {winStreak[player] >= 3 ? "🔥🔥🔥" : winStreak[player] === 2 ? "🔥🔥" : bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
+                  </li>
                 ))}
+                </ul>
+                
+              </div>
+
+              {/* Текущий раунд (справа) */}
+              {results && (
+                <div className="text-center">
+                  <h2 className="text-lg font-bold mb-2">🎲 Текущий раунд</h2>
+                  <p className="text-lg font-semibold">
+                    {results.winner !== "No winner" ? `🏆 ${results.winner} выиграл ${results.reward} монет!` : "Никто не выиграл."}
+                  </p>
+                  <ul className="text-sm text-gray-700 mt-2">
+                    <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
+                    {results.botChoices.map((choice: number, index: number) => (
+                      <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* 🌟 Описание игры (теперь внизу) */}
+            <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
+              <ul className="text-sm space-y-1 text-gray-700">
+                <li>• Вы играете против 3 ботов</li>
+                <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
+                <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
+                <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
+                <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
+                <li>• 🏦 <span className="font-semibold">Банк</span>: неразыгранные монеты попадают в банк</li>
+                <li>• 🔥 Когда в банке накапливается {BANK_THRESHOLD} монет, его можно выиграть</li>
+                <li>• 🏆 Чтобы забрать банк, нужно <span className="font-semibold">выиграть 3 раза подряд</span></li>
               </ul>
             </div>
-          )}
-        </div>
-
-      {/* 🌟 Описание игры (теперь внизу) */}
-        {/* 🌟 Описание игры (внизу) */}
-        <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
-          <ul className="text-sm space-y-1 text-gray-700">
-            <li>• Вы играете против 3 ботов</li>
-            <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
-            <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
-            <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
-            <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
-            <li>• 🏦 <span className="font-semibold">Банк</span>: неразыгранные монеты попадают в банк</li>
-            <li>• 🔥 Когда в банке накапливается {BANK_THRESHOLD} монет, его можно выиграть</li>
-            <li>• 🏆 Чтобы забрать банк, нужно <span className="font-semibold">выиграть 3 раза подряд</span></li>
-          </ul>
-        </div>
-
+          </>
+        ) : (
+          <BankGame />
+        )}
       </div>
     </div>
   );
