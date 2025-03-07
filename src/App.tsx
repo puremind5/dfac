@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash as Treasure } from 'lucide-react';
 import GameBoard from './components/GameBoard';
 import BankGame from './BankGame';
+import ThreePlayersGame from './ThreePlayersGame';
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 const GAME_COST = 25; // 💰 Стоимость каждой игры
@@ -28,7 +29,7 @@ function App() {
     "Bot 3": 100,
   });
 
-  const [gameVersion, setGameVersion] = useState<'original' | 'bank'>('original');
+  const [gameVersion, setGameVersion] = useState<'original' | 'bank' | 'three-players'>('original');
 
   // Для отладки: делаем состояние глобально доступным
   // (только для разработки, не использовать в продакшене)
@@ -169,16 +170,22 @@ function App() {
         {/* Переключатель версий игры */}
         <div className="flex justify-center mt-4 mb-4">
           <button 
-            className={`px-4 py-2 rounded-l-lg ${gameVersion === 'original' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            className={`px-4 py-2 ${gameVersion === 'original' ? 'bg-blue-600 text-white' : 'bg-gray-200'} ${gameVersion === 'original' ? '' : 'rounded-l-lg'}`}
             onClick={() => setGameVersion('original')}
           >
             Оригинальная игра
           </button>
           <button 
-            className={`px-4 py-2 rounded-r-lg ${gameVersion === 'bank' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            className={`px-4 py-2 ${gameVersion === 'bank' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
             onClick={() => setGameVersion('bank')}
           >
             Игра с БАНКОМ
+          </button>
+          <button 
+            className={`px-4 py-2 ${gameVersion === 'three-players' ? 'bg-blue-600 text-white' : 'bg-gray-200'} ${gameVersion === 'three-players' ? '' : 'rounded-r-lg'}`}
+            onClick={() => setGameVersion('three-players')}
+          >
+            3 игрока / 3 сундука
           </button>
         </div>
         
@@ -253,8 +260,10 @@ function App() {
               </ul>
             </div>
           </>
-        ) : (
+        ) : gameVersion === 'bank' ? (
           <BankGame />
+        ) : (
+          <ThreePlayersGame />
         )}
       </div>
     </div>

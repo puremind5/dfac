@@ -2,21 +2,19 @@ import React, { useState } from 'react';
 import { Trash as Treasure } from 'lucide-react';
 
 // Константы
-const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
-const GAME_COST = 25; // 💰 Стоимость каждой игры
+const CHEST_VALUES = { 1: 35, 2: 50, 3: 75 }; // Награды в сундуках: 35, 50, 75
+const GAME_COST = 25; // 💰 Стоимость каждой игры - 25 монет
 const BANK_THRESHOLD = 100; // 📌 Порог банка для розыгрыша
-const BANK_WIN_THRESHOLD = 200; // 📌 Порог для выигрыша банка
-const BANK_DISTRIBUTION_THRESHOLD = 200; // 📌 Порог для распределения монет банком
-const BANK_RESERVE = 100; // 📌 Резерв банка после распределения
+const BANK_RESERVE = 50; // 📌 Резерв банка после распределения
 
-const BankGame: React.FC = () => {
+const ThreePlayersGame: React.FC = () => {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [gameActive, setGameActive] = useState<boolean>(true);
   const [playerGold, setPlayerGold] = useState(100);
   const [bot1Gold, setBot1Gold] = useState(100);
   const [bot2Gold, setBot2Gold] = useState(100);
-  const [bankGold, setBankGold] = useState(100); // Начальное значение банка = 100
+  const [bankGold, setBankGold] = useState(0); // Начальное значение банка = 0
   const [winStreak, setWinStreak] = useState<{ [key: string]: number }>({
     You: 0,
     "Bot 1": 0,
@@ -29,27 +27,10 @@ const BankGame: React.FC = () => {
     setGameLog(prev => [message, ...prev].slice(0, 10));
   };
 
-  // Функция распределения монет из банка
-  const distributeBankGold = () => {
-    if (bankGold > BANK_DISTRIBUTION_THRESHOLD) {
-      const amountToDistribute = bankGold - BANK_RESERVE;
-      const eachPlayerGets = Math.floor(amountToDistribute / 3);
-      
-      setPlayerGold(prev => prev + eachPlayerGets);
-      setBot1Gold(prev => prev + eachPlayerGets);
-      setBot2Gold(prev => prev + eachPlayerGets);
-      setBankGold(BANK_RESERVE);
-      
-      addToLog(`💰 Банк распределил ${amountToDistribute} монет (по ${eachPlayerGets} каждому игроку)`);
-      return true;
-    }
-    return false;
-  };
-
   // Функция распределения монет из банка при выигрыше винстрика
   const distributeBankGoldToWinner = (winner: string) => {
-    if (bankGold >= BANK_WIN_THRESHOLD && winStreak[winner] === 2) { // На этом ходу будет 3-я победа
-      const bankReward = Math.max(0, bankGold - 100); // Банк оставляет себе 100 монет
+    if (bankGold >= BANK_THRESHOLD && winStreak[winner] === 2) { // На этом ходу будет 3-я победа
+      const bankReward = Math.max(0, bankGold); // Банк отдает все свои деньги
       if (bankReward > 0) {
         if (winner === "You") {
           setPlayerGold(prev => prev + bankReward);
@@ -58,8 +39,8 @@ const BankGame: React.FC = () => {
         } else if (winner === "Bot 2") {
           setBot2Gold(prev => prev + bankReward);
         }
-        setBankGold(100); // Оставляем банку 100 монет
-        addToLog(`🔥 ${winner} выиграл ${bankReward} монет из банка! Банк оставил себе 100 монет.`);
+        setBankGold(0); // Банк остается пустым
+        addToLog(`🔥 ${winner} выиграл весь банк в размере ${bankReward} монет!`);
         return true;
       }
     }
@@ -73,25 +54,16 @@ const BankGame: React.FC = () => {
 
     // Логика выбора сундука
     const playerChoice = chestNumber;
-    const bot1Choice = Math.floor(Math.random() * 4) + 1;
-    const bot2Choice = Math.floor(Math.random() * 4) + 1;
+    const bot1Choice = Math.floor(Math.random() * 3) + 1; // Выбор из 3 сундуков
+    const bot2Choice = Math.floor(Math.random() * 3) + 1; // Выбор из 3 сундуков
 
     // 💰 Игроки платят за вход в игру
     setPlayerGold(prev => prev - GAME_COST);
     setBot1Gold(prev => prev - GAME_COST);
     setBot2Gold(prev => prev - GAME_COST);
 
-    // БАНК доставляет 25 монет, чтобы общий размер монет на кону был 100
-    const totalBet = 100;
-    const playersBet = 75; // 3 игрока вносят по 25
-    const bankContribution = totalBet - playersBet;
-    
-    // Банк снимает со своего счета (может уйти в минус)
-    setBankGold(prev => prev - bankContribution);
-    if (bankGold - bankContribution < 0 && !bankInDebt) {
-      setBankInDebt(true);
-      addToLog(`🚨 Банк ушел в минус! Текущий баланс: ${bankGold - bankContribution}`);
-    }
+    // Общий банк за игру
+    const totalBet = GAME_COST * 3; // 75 монет (3 игрока по 25 монет)
 
     // Считаем количество выборов
     const allChoices = [playerChoice, bot1Choice, bot2Choice];
@@ -119,10 +91,10 @@ const BankGame: React.FC = () => {
         reward = CHEST_VALUES[bestChoice];
         setPlayerGold(prev => prev + reward);
         
-        // Увеличиваем серию побед
+        // Увеличиваем серию побед только если в банке достаточно монет
         setWinStreak(prev => ({
           ...prev,
-          You: prev.You + 1,
+          You: bankGold >= BANK_THRESHOLD ? prev.You + 1 : 0,
           "Bot 1": 0,
           "Bot 2": 0
         }));
@@ -131,11 +103,11 @@ const BankGame: React.FC = () => {
         reward = CHEST_VALUES[bestChoice];
         setBot1Gold(prev => prev + reward);
         
-        // Увеличиваем серию побед
+        // Увеличиваем серию побед только если в банке достаточно монет
         setWinStreak(prev => ({
           ...prev,
           You: 0,
-          "Bot 1": prev["Bot 1"] + 1,
+          "Bot 1": bankGold >= BANK_THRESHOLD ? prev["Bot 1"] + 1 : 0,
           "Bot 2": 0
         }));
       } else if (bot2Choice === bestChoice) {
@@ -143,12 +115,12 @@ const BankGame: React.FC = () => {
         reward = CHEST_VALUES[bestChoice];
         setBot2Gold(prev => prev + reward);
         
-        // Увеличиваем серию побед
+        // Увеличиваем серию побед только если в банке достаточно монет
         setWinStreak(prev => ({
           ...prev,
           You: 0,
           "Bot 1": 0,
-          "Bot 2": prev["Bot 2"] + 1
+          "Bot 2": bankGold >= BANK_THRESHOLD ? prev["Bot 2"] + 1 : 0
         }));
       }
 
@@ -160,7 +132,7 @@ const BankGame: React.FC = () => {
       setBankGold(prev => {
         const newBankGold = prev + remainingGold;
         // Проверяем, не пора ли банку распределить монеты
-        if (newBankGold > BANK_DISTRIBUTION_THRESHOLD) {
+        if (newBankGold > BANK_THRESHOLD) {
           // Банк будет распределять монеты в следующем раунде
           addToLog(`📢 Банк готовится распределить монеты!`);
         }
@@ -175,7 +147,7 @@ const BankGame: React.FC = () => {
       setBankGold(prev => {
         const newBankGold = prev + totalBet;
         // Проверяем, не пора ли банку распределить монеты
-        if (newBankGold > BANK_DISTRIBUTION_THRESHOLD) {
+        if (newBankGold > BANK_THRESHOLD) {
           // Банк будет распределять монеты в следующем раунде
           addToLog(`📢 Банк готовится распределить монеты!`);
         }
@@ -186,12 +158,15 @@ const BankGame: React.FC = () => {
         return newBankGold;
       });
       
-      // Сбрасываем серии побед
+      // Сбрасываем серии побед для всех игроков
       setWinStreak({
         You: 0,
         "Bot 1": 0,
         "Bot 2": 0
       });
+      
+      // Добавляем сообщение в лог
+      addToLog("Ничья! Все серии побед сброшены.");
     }
 
     // Обновляем результаты
@@ -213,8 +188,8 @@ const BankGame: React.FC = () => {
   return (
     <div>
       {/* 🎯 Игровая доска */}
-      <div className="grid grid-cols-4 gap-4 p-6 bg-purple-100 rounded-lg">
-        {[1, 2, 3, 4].map(chest => (
+      <div className="grid grid-cols-3 gap-4 p-6 bg-amber-100 rounded-lg">
+        {[1, 2, 3].map(chest => (
           <button
             key={chest}
             onClick={() => handleChestSelect(chest)}
@@ -247,7 +222,8 @@ const BankGame: React.FC = () => {
       {/* 🌟 Банк */}
       <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
         <h2 className="text-lg font-bold">🏦 Банк: {bankGold} монет {bankInDebt && "🚨"}</h2>
-        {bankGold >= BANK_WIN_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        {bankGold >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+        {bankInDebt && <p className="text-red-500 font-semibold">🚨 Банк в минусе!</p>}
       </div>
 
       {/* 🌟 Общий счёт + текущий раунд */}
@@ -258,15 +234,15 @@ const BankGame: React.FC = () => {
           <ul className="text-sm text-gray-700">
             <li className={`py-1 ${playerGold < 0 ? "text-red-500" : ""}`}>
               You: {playerGold} монет{" "}
-              {winStreak.You >= 3 ? "🔥🔥🔥" : winStreak.You === 2 ? "🔥🔥" : bankGold >= BANK_WIN_THRESHOLD ? `(🔥 ${winStreak.You} побед подряд)` : ""}
+              {winStreak.You >= 3 ? "🔥🔥🔥" : winStreak.You === 2 ? "🔥🔥" : bankGold >= BANK_THRESHOLD ? `(🔥 ${winStreak.You} побед подряд)` : ""}
             </li>
             <li className={`py-1 ${bot1Gold < 0 ? "text-red-500" : ""}`}>
               Bot 1: {bot1Gold} монет{" "}
-              {winStreak["Bot 1"] >= 3 ? "🔥🔥🔥" : winStreak["Bot 1"] === 2 ? "🔥🔥" : bankGold >= BANK_WIN_THRESHOLD ? `(🔥 ${winStreak["Bot 1"]} побед подряд)` : ""}
+              {winStreak["Bot 1"] >= 3 ? "🔥🔥🔥" : winStreak["Bot 1"] === 2 ? "🔥🔥" : bankGold >= BANK_THRESHOLD ? `(🔥 ${winStreak["Bot 1"]} побед подряд)` : ""}
             </li>
             <li className={`py-1 ${bot2Gold < 0 ? "text-red-500" : ""}`}>
               Bot 2: {bot2Gold} монет{" "}
-              {winStreak["Bot 2"] >= 3 ? "🔥🔥🔥" : winStreak["Bot 2"] === 2 ? "🔥🔥" : bankGold >= BANK_WIN_THRESHOLD ? `(🔥 ${winStreak["Bot 2"]} побед подряд)` : ""}
+              {winStreak["Bot 2"] >= 3 ? "🔥🔥🔥" : winStreak["Bot 2"] === 2 ? "🔥🔥" : bankGold >= BANK_THRESHOLD ? `(🔥 ${winStreak["Bot 2"]} побед подряд)` : ""}
             </li>
           </ul>
         </div>
@@ -293,15 +269,15 @@ const BankGame: React.FC = () => {
         <h2 className="text-xl font-bold text-center mb-2">Как играть:</h2>
         <ul className="text-sm space-y-1 text-gray-700">
           <li>• Вы играете против 2 ботов</li>
-          <li>• В каждом сундуке разное количество золота: 35, 50, 70 или 100 монет</li>
+          <li>• В каждом сундуке разное количество золота: 35, 50, 75 монет</li>
           <li>• Если только вы выбрали самый ценный сундук, вы получаете золото</li>
           <li>• Если несколько игроков выбрали один и тот же сундук, никто не получает золото</li>
           <li className="font-semibold">• 💰 Стоимость участия в раунде: {GAME_COST} монет</li>
           <li>• 🏦 <span className="font-semibold">Банк</span>: неразыгранные монеты попадают в банк</li>
-          <li>• 🔥 Когда в банке накапливается {BANK_WIN_THRESHOLD} монет, его можно выиграть</li>
-          <li>• 🏆 При серии из 3 побед подряд игрок забирает деньги из банка, но банк оставляет себе 100 монет</li>
-          <li>• 💸 <span className="font-semibold">Банк</span> доставляет 25 монет на кон, чтобы общий размер был 100</li>
-          <li>• 🚨 <span className="font-semibold">Банк</span> может уйти в минус</li>
+          <li>• 🔥 Когда в банке накапливается {BANK_THRESHOLD} монет, его можно выиграть</li>
+          <li>• 🏆 Серия побед начинает считаться только тогда, когда в банке есть хотя бы {BANK_THRESHOLD} монет</li>
+          <li>• 🏆 При серии из 3 побед подряд игрок забирает весь банк</li>
+          <li>• 🏆 Чтобы забрать банк, нужно <span className="font-semibold">выиграть 3 раза подряд</span></li>
         </ul>
       </div>
       
@@ -318,4 +294,4 @@ const BankGame: React.FC = () => {
   );
 };
 
-export default BankGame; 
+export default ThreePlayersGame; 
