@@ -418,12 +418,14 @@ function App() {
                 <h2 className="text-lg font-bold mb-2">💰 Общий счёт</h2>
 
                 <ul className="text-sm text-gray-700">
-                  {Object.entries(totalGold).map(([player, gold]) => (
-                  <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
-                  {player}: {gold} монет{" "}
-                  {winStreak[player] >= 3 ? "🔥🔥🔥" : winStreak[player] === 2 ? "🔥🔥" : bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
-                  </li>
-                ))}
+                  {Object.entries(totalGold)
+                    .filter(([player]) => ["You", "Алиса", "Олег", "Сири"].includes(player))
+                    .map(([player, gold]) => (
+                    <li key={player} className={`py-1 ${gold < 0 ? "text-red-500" : ""}`}>
+                    {player}: {gold} монет{" "}
+                    {winStreak[player] >= 3 ? "🔥🔥🔥" : winStreak[player] === 2 ? "🔥🔥" : bank >= BANK_THRESHOLD ? `(🔥 ${winStreak[player]} побед подряд)` : ""}
+                    </li>
+                  ))}
                 </ul>
                 
               </div>
