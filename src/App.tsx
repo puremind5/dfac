@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash as Treasure } from 'lucide-react';
-import GameBoard from './components/GameBoard';
+import GameBoard2 from './components/GameBoard2';
 import BankGame from './BankGame';
 import ThreePlayersGame from './ThreePlayersGame';
 import Players from './components/Players';
@@ -41,129 +41,287 @@ function App() {
     'Bot 3': false
   });
 
-  // Для отладки: делаем состояние глобально доступным
-  // (только для разработки, не использовать в продакшене)
+  const [playerChoice, setPlayerChoice] = useState<number | null>(null);
+
+  // Таймер
   useEffect(() => {
-    (window as any).gameState = {
-      getState: () => ({
-        gameActive,
-        totalGold,
-        bank,
-        winStreak,
-        results
-      })
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (gameActive) {
+      // Сбрасываем таймер при начале нового раунда
+      setTimeLeft(10);
+      console.log('Запуск таймера, gameActive =', gameActive);
+      
+      // Запускаем таймер
+      timer = setInterval(() => {
+        setTimeLeft(prevTime => {
+          console.log('Таймер: осталось', prevTime, 'секунд');
+          // Когда время истекло
+          if (prevTime <= 1) {
+            console.log('Таймер закончился!');
+            clearInterval(timer!);
+            
+            // Если игрок не сделал выбор, выбираем случайный сундук
+            if (!playersMadeChoice['You']) {
+              console.log('Игрок не сделал выбор, выбираем случайный сундук');
+              const randomChest = Math.floor(Math.random() * 4) + 1;
+              setPlayerChoice(randomChest);
+              setPlayersMadeChoice(prev => ({
+                ...prev,
+                'You': true
+              }));
+              
+              // Завершаем раунд с выбором за игрока
+              console.log('Вызываем finishRound с случайным выбором:', randomChest);
+              finishRound(randomChest);
+            } else if (playerChoice !== null) {
+              // Если игрок уже сделал выбор, завершаем раунд с его выбором
+              console.log('Игрок уже сделал выбор:', playerChoice, 'вызываем finishRound');
+              finishRound(playerChoice);
+            } else {
+              console.log('Ошибка: playersMadeChoice[You] = true, но playerChoice = null');
+            }
+            
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) {
+        console.log('Очищаем таймер при размонтировании компонента');
+        clearInterval(timer);
+      }
     };
-  }, [gameActive, totalGold, bank, winStreak, results]);
+  }, [gameActive]);
 
-  const handleChestSelect = async (chestIndex: number) => {
+  // Проверка, сделали ли все игроки выбор
+  useEffect(() => {
+    // Запускается только во время активной игры
+    if (!gameActive || !playerChoice) return;
+    
+    // Создаем интервал для проверки выборов всех игроков
+    const checkInterval = setInterval(() => {
+      console.log('Проверяем, сделали ли все игроки выбор:', playersMadeChoice);
+      
+      // Проверяем, сделали ли все игроки выбор
+      const allPlayersChose = Object.values(playersMadeChoice).every(choice => choice === true);
+      
+      if (allPlayersChose) {
+        console.log('Все игроки сделали выбор! Заканчиваем раунд досрочно.');
+        clearInterval(checkInterval);
+        
+        // Завершаем раунд с выбором игрока
+        finishRound(playerChoice);
+      }
+    }, 1000); // Проверка каждую секунду
+    
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, [playersMadeChoice, gameActive, playerChoice]);
+
+  const handleChestSelect = (chestIndex: number) => {
     if (!gameActive) return;
+    
+    console.log('Игрок выбрал сундук:', chestIndex);
 
-    try {
-      // Добавляем логирование состояния игры перед запросом
-      console.log('🎮 Состояние игры ДО запроса:', { 
-        gameActive, 
-        totalGold, 
-        bank, 
-        winStreak,
-        chestIndex
+    // Сохраняем выбор игрока
+    setPlayerChoice(chestIndex);
+    
+    // Отмечаем, что игрок сделал выбор
+    setPlayersMadeChoice(prev => ({
+      ...prev,
+      'You': true
+    }));
+
+    // Если таймер уже закончился, завершаем раунд сразу
+    if (timeLeft <= 0) {
+      console.log('Таймер уже закончился, вызываем finishRound напрямую');
+      finishRound(chestIndex);
+    } else {
+      console.log('Таймер ещё не закончился, ждем его окончания');
+    }
+  };
+
+  // Определяем победителя
+  const determineWinner = (playerChoice: number, botChoices: number[], reward: number) => {
+    // Ценность сундуков (индекс + 1 = номер сундука)
+    const chestValues = [35, 50, 70, 100];
+    
+    // Собираем все выборы в один массив
+    const allChoices = [...botChoices];
+    
+    // Создаем объект, где ключ - номер сундука, значение - массив игроков, выбравших этот сундук
+    const choiceMap: Record<number, string[]> = {
+      1: [],
+      2: [],
+      3: [],
+      4: []
+    };
+    
+    // Добавляем выбор игрока
+    choiceMap[playerChoice].push('You');
+    
+    // Добавляем выборы ботов
+    botChoices.forEach((choice, index) => {
+      choiceMap[choice].push(`Bot ${index + 1}`);
+    });
+    
+    console.log('Карта выборов:', choiceMap);
+    
+    // Находим уникальные выборы (сундуки, которые выбрал только один игрок)
+    const uniqueChoices: {chest: number, player: string, value: number}[] = [];
+    
+    Object.entries(choiceMap).forEach(([chest, players]) => {
+      const chestNumber = parseInt(chest);
+      if (players.length === 1) {
+        // Это уникальный выбор
+        uniqueChoices.push({
+          chest: chestNumber,
+          player: players[0],
+          value: chestValues[chestNumber - 1]
+        });
+      }
+    });
+    
+    console.log('Уникальные выборы:', uniqueChoices);
+    
+    // Если есть уникальные выборы, находим самый ценный
+    if (uniqueChoices.length > 0) {
+      // Сортируем по убыванию ценности
+      uniqueChoices.sort((a, b) => b.value - a.value);
+      
+      // Возвращаем игрока с самым ценным уникальным выбором
+      console.log('Победитель:', uniqueChoices[0].player, 'с сундуком', uniqueChoices[0].chest, '(', uniqueChoices[0].value, 'золота)');
+      return uniqueChoices[0].player;
+    }
+    
+    // Если нет уникальных выборов, никто не выигрывает
+    console.log('Нет уникальных выборов, нет победителя');
+    return 'No winner';
+  };
+
+  // Обновляем банк и золото
+  const updateBankAndGold = (winner: string, reward: number) => {
+    // Если есть победитель, добавляем ему награду
+    if (winner !== 'No winner') {
+      setTotalGold(prev => ({
+        ...prev,
+        [winner]: prev[winner] + reward
+      }));
+    }
+    
+    // Добавляем неразыгранное золото в банк
+    if (winner === 'No winner') {
+      setBank(prev => prev + GAME_COST * 4); // Все 4 игрока заплатили, но никто не получил
+    } else {
+      setBank(prev => prev + (GAME_COST * 4 - reward)); // Добавляем разницу между платой и наградой
+    }
+  };
+
+  // Обновляем серии побед
+  const updateWinStreaks = (winner: string) => {
+    if (winner !== 'No winner') {
+      // Увеличиваем серию побед победителя
+      setWinStreak(prev => ({
+        ...prev,
+        [winner]: prev[winner] + 1
+      }));
+      
+      // Сбрасываем серии побед проигравших
+      setWinStreak(prev => {
+        const newStreak = { ...prev };
+        Object.keys(newStreak).forEach(player => {
+          if (player !== winner) {
+            newStreak[player] = 0;
+          }
+        });
+        return newStreak;
       });
+      
+      // Если победитель выиграл 3 раза подряд и банк достаточно большой
+      if (winStreak[winner] + 1 >= 3 && bank >= BANK_THRESHOLD) {
+        // Выплачиваем банк победителю
+        setTotalGold(prev => ({
+          ...prev,
+          [winner]: prev[winner] + bank
+        }));
+        setBank(0); // Обнуляем банк
+      }
+    } else {
+      // Если нет победителя, все серии сбрасываются
+      setWinStreak({
+        'You': 0,
+        'Bot 1': 0,
+        'Bot 2': 0,
+        'Bot 3': 0
+      });
+    }
+  };
 
+  // Вынесем логику завершения раунда в отдельную функцию
+  const finishRound = (chestIndex: number) => {
+    console.log('Функция finishRound начала выполнение');
+    try {
       setLoading(true);
       setError(null);
       setGameActive(false);
 
-      // 💰 Все игроки платят за вход в игру (100 монет суммарно)
-      setTotalGold(prevGold => ({
-        You: prevGold["You"] - GAME_COST,
-        "Bot 1": prevGold["Bot 1"] - GAME_COST,
-        "Bot 2": prevGold["Bot 2"] - GAME_COST,
-        "Bot 3": prevGold["Bot 3"] - GAME_COST,
-      }));
+      // Генерируем локальные данные
+      const botChoices = [
+        Math.floor(Math.random() * 4) + 1,
+        Math.floor(Math.random() * 4) + 1,
+        Math.floor(Math.random() * 4) + 1
+      ];
+      
+      // Определяем награду (35, 50, 70 или 100)
+      const reward = [35, 50, 70, 100][Math.floor(Math.random() * 4)];
+      
+      console.log('Данные для игры:', { playerChoice: chestIndex, botChoices, reward });
+      
+      // Определяем победителя
+      const winner = determineWinner(chestIndex, botChoices, reward);
+      console.log('Определен победитель:', winner);
 
-      const response = await fetch('/api/game/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerChoice: chestIndex }),
-      });
+      // Обновляем результаты
+      const results = {
+        winner,
+        reward,
+        playerChoice: chestIndex,
+        botChoices,
+      };
+      
+      console.log('Устанавливаем результаты:', results);
+      setResults(results);
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
+      // Обновляем банк, баланс игроков и серию побед
+      updateBankAndGold(winner, reward);
+      updateWinStreaks(winner);
 
-      const data = await response.json();
-      console.log("API Response in App.tsx:", data);
-
-      if (!data || typeof data !== 'object' || !('winner' in data)) {
-        throw new Error("Invalid response format");
-      }
-
-      setResults(data);
-
-      const totalCollected = 100; // 4 игрока по 25 монет
-      let totalPaidOut = data.winner !== "No winner" ? data.reward : 0;
-
-      // 🎮 Добавляем логирование после получения результатов
-      console.log('🎮 Результаты игры:', { 
-        winner: data.winner, 
-        reward: data.reward, 
-        totalCollected,
-        totalPaidOut
-      });
-
-      // 🌟 Если кто-то выиграл, добавляем золото к его балансу
-      if (data.winner !== "No winner") {
-        setTotalGold(prevGold => ({
-          ...prevGold,
-          [data.winner]: (prevGold[data.winner] || 0) + data.reward,
-        }));
-
-        // ✅ Увеличиваем серию побед только у победителя
-        setWinStreak(prevStreak => ({
-          ...prevStreak,
-          [data.winner]: bank >= BANK_THRESHOLD ? (prevStreak[data.winner] || 0) + 1 : 0,
-        }));
-
-        // 🏆 Если игрок выиграл 3 раза подряд – он забирает БАНК
-        if (bank >= BANK_THRESHOLD && winStreak[data.winner] + 1 === 3) {
-          setTotalGold(prevGold => ({
-            ...prevGold,
-            [data.winner]: prevGold[data.winner] + bank,
-          }));
-          setBank(0); // 🔥 БАНК очищается после выигрыша
-        }
-
-        // ❌ Проигравшие сбрасывают серию побед
-        setWinStreak(prevStreak => {
-          let updatedStreak = { ...prevStreak };
-          Object.keys(updatedStreak).forEach(player => {
-            if (player !== data.winner) {
-              updatedStreak[player] = 0;
-            }
-          });
-          return updatedStreak;
-        });
-
-      } else {
-        setWinStreak({ You: 0, "Bot 1": 0, "Bot 2": 0, "Bot 3": 0 }); // ❌ Если никто не выиграл, сбросить ВСЕ серии
-      }
-
-      // 📌 В банк отправляется ТОЛЬКО неразыгранные монеты
-      const leftover = totalCollected - totalPaidOut;
-      if (leftover > 0) {
-        setBank(prevBank => prevBank + leftover);
-      }
-
-    } catch (err) {
-      setError('Failed to connect to the game server');
-      console.error("Fetch error:", err);
-    } finally {
+      setLoading(false);
+      console.log('Функция finishRound завершила выполнение');
+    } catch (error) {
+      console.error("Ошибка при финализации раунда:", error);
+      setError("Произошла ошибка. Пожалуйста, попробуйте еще раз.");
       setLoading(false);
     }
   };
 
   const startNewRound = () => {
-    setResults(null);
     setGameActive(true);
+    setResults(null);
+    setError(null);
+    setPlayerChoice(null); // Сбрасываем выбор игрока
+    setPlayersMadeChoice({
+      'You': false,
+      'Bot 1': false,
+      'Bot 2': false,
+      'Bot 3': false
+    });
+    console.log("Начинаем новый раунд");
   };
 
   return (
@@ -202,10 +360,21 @@ function App() {
         {gameVersion === 'original' ? (
           <>
             {/* 🎯 Оригинальная игровая доска */}
-            <GameBoard onChestSelect={handleChestSelect} loading={loading} gameActive={gameActive} />
+            <GameBoard2 
+              onChestSelect={handleChestSelect} 
+              loading={loading} 
+              gameActive={gameActive} 
+              selectedChest={playerChoice}
+            />
             
             {/* Добавляем компонент Players */}
-            <Players results={results} timeLeft={timeLeft} gameActive={gameActive} playersMadeChoice={playersMadeChoice} />
+            <Players 
+              results={results} 
+              timeLeft={timeLeft} 
+              gameActive={gameActive} 
+              playersMadeChoice={playersMadeChoice}
+              setPlayersMadeChoice={setPlayersMadeChoice}
+            />
             
             {results && (
               <div className="flex justify-center mt-6">
