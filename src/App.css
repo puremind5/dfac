@@ -42,6 +42,22 @@
   }
 }
 
+/* Анимация для перемещения игроков под выбранные сундуки */
+@keyframes moveToChest {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-20px) scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-50px) scale(0.8);
+    opacity: 1;
+  }
+}
+
 .pulse-animation {
   animation: pulse 1s infinite;
 }
@@ -52,7 +68,7 @@
 
 /* Стили для кнопок */
 button:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -85,4 +101,138 @@ button:disabled {
 .chest-not-selected {
   opacity: 0.6;
   transition: all 0.3s ease;
+}
+
+/* Общий контейнер для игроков и сундуков */
+.game-container {
+  position: relative;
+  margin-bottom: 100px; /* Увеличиваем отступ снизу для кружков */
+}
+
+/* Сундуки */
+.chests-container {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 50px; /* Увеличиваем отступ для кружков */
+}
+
+/* Игроки после выбора */
+.players-wrapper {
+  position: relative;
+  transition: none;
+}
+
+.player-container {
+  position: relative;
+  transition: none;
+}
+
+/* Позиции для игроков после выбора */
+.results-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 30px;
+  position: relative;
+  padding-bottom: 60px; /* Добавляем отступ снизу для кнопки */
+}
+
+/* Контейнер для игроков, выбравших один сундук */
+.chest-result-group {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+/* Позиции для групп игроков */
+.chest-group-1 {
+  left: 12.5%;
+}
+
+.chest-group-2 {
+  left: 37.5%;
+}
+
+.chest-group-3 {
+  left: 62.5%;
+}
+
+.chest-group-4 {
+  left: 87.5%;
+}
+
+/* Стиль для каждого игрока в результате */
+.player-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Увеличиваем размер кружка до оригинального */
+.player-circle-result {
+  width: 64px; /* Как оригинальный w-16 */
+  height: 64px; /* Как оригинальный h-16 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+/* Стиль для позиции игрока в результате */
+.player-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+/* Стиль для перемещения игрока к сундуку */
+.player-at-chest-1 {
+  position: absolute;
+  left: 12.5%;
+  transform: translateX(-50%);
+}
+
+.player-at-chest-2 {
+  position: absolute;
+  left: 37.5%;
+  transform: translateX(-50%);
+}
+
+.player-at-chest-3 {
+  position: absolute;
+  left: 62.5%;
+  transform: translateX(-50%);
+}
+
+.player-at-chest-4 {
+  position: absolute;
+  left: 87.5%;
+  transform: translateX(-50%);
+}
+
+/* Удаляем ненужные стили */
+.player-position,
+.chest-position-1,
+.chest-position-2,
+.chest-position-3,
+.chest-position-4,
+.player-result-circle,
+.move-to-chest-1, 
+.move-to-chest-2,
+.move-to-chest-3,
+.move-to-chest-4 {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.selected-chest {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 223, 0, 0.8);
 } 

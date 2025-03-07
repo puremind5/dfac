@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../App.css'; // Импортируем стили
 
 interface PlayersProps {
   results: any;
@@ -9,6 +10,8 @@ interface PlayersProps {
 }
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
+// Имена ботов
+const BOT_NAMES = ['Алиса', 'Олег', 'Сири'];
 
 const Players: React.FC<PlayersProps> = ({ 
   results, 
@@ -18,29 +21,29 @@ const Players: React.FC<PlayersProps> = ({
   setPlayersMadeChoice 
 }) => {
   const [botChoices, setBotChoices] = useState<Record<string, boolean>>({
-    'Bot 1': false,
-    'Bot 2': false,
-    'Bot 3': false
+    'Алиса': false,
+    'Олег': false,
+    'Сири': false
   });
-
+  
   // Сброс состояний при начале нового раунда
   useEffect(() => {
     if (gameActive) {
       setBotChoices({
-        'Bot 1': false,
-        'Bot 2': false,
-        'Bot 3': false
+        'Алиса': false,
+        'Олег': false,
+        'Сири': false
       });
       setPlayersMadeChoice({
         'You': false,
-        'Bot 1': false,
-        'Bot 2': false,
-        'Bot 3': false
+        'Алиса': false,
+        'Олег': false,
+        'Сири': false
       });
 
       // Боты делают выбор в случайное время в течение таймера
-      ['Bot 1', 'Bot 2', 'Bot 3'].forEach(bot => {
-        // Случайная задержка от 1 до 8 секунд
+      BOT_NAMES.forEach(bot => {
+        // Случайная задержка от 1 до 5 секунд
         const delay = 1000 + Math.random() * 4000;
         setTimeout(() => {
           setBotChoices(prev => ({
@@ -63,11 +66,12 @@ const Players: React.FC<PlayersProps> = ({
     return 'draw';
   };
 
-  return (
+  // Во время активной игры показываем обычную сетку
+  const renderPlayersGrid = () => (
     <div className="mt-8 grid grid-cols-4 gap-4 items-center justify-center">
       {/* Игрок */}
-      <div className="text-center">
-        <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center 
+      <div className="text-center player-container">
+        <div className={`player-circle w-16 h-16 mx-auto rounded-full flex items-center justify-center 
           ${!gameActive ? (
             getPlayerResult('You') === 'win' ? 'bg-green-500 ring-4 ring-green-400 ring-pulse' :
             getPlayerResult('You') === 'lose' ? 'bg-gray-300 ring-4 ring-red-500' :
@@ -79,17 +83,12 @@ const Players: React.FC<PlayersProps> = ({
           <span className="text-xl font-bold text-white">1</span>
         </div>
         <p className="mt-2 font-bold">Вы</p>
-        {results && (
-          <p className="text-xs text-gray-500 mt-1">
-            выбрал {CHEST_VALUES[results.playerChoice]} Gold
-          </p>
-        )}
       </div>
 
       {/* Боты */}
-      {['Bot 1', 'Bot 2', 'Bot 3'].map((bot, index) => (
-        <div key={bot} className="text-center">
-          <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600
+      {BOT_NAMES.map((bot, index) => (
+        <div key={bot} className="text-center player-container">
+          <div className={`player-circle w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600
             ${!gameActive ? (
               getPlayerResult(bot) === 'win' ? 'ring-4 ring-green-400 ring-pulse' :
               getPlayerResult(bot) === 'lose' ? 'ring-4 ring-red-500 opacity-50' :
@@ -100,15 +99,86 @@ const Players: React.FC<PlayersProps> = ({
             transition-all duration-300`}>
             <span className="text-xl font-bold text-white">{index + 2}</span>
           </div>
-          <p className="mt-2 font-bold">Бот {index + 1}</p>
-          {results && (
-            <p className="text-xs text-gray-500 mt-1">
-              выбрал {CHEST_VALUES[results.botChoices[index]]} Gold
-            </p>
-          )}
+          <p className="mt-2 font-bold">{bot}</p>
         </div>
       ))}
     </div>
+  );
+
+  // Когда игра неактивна и есть результаты, отображаем игроков под сундуками
+  const renderPlayersUnderChests = () => {
+    if (!results) return null;
+    
+    // Группируем игроков по выбранным сундукам
+    const chestSelections = {
+      1: [] as any[],
+      2: [] as any[],
+      3: [] as any[],
+      4: [] as any[]
+    };
+    
+    // Добавляем игрока
+    chestSelections[results.playerChoice].push({
+      name: 'You',
+      displayName: 'Вы',
+      number: 1,
+      isWinner: results.winner === 'You',
+      isLoser: results.winner !== 'No winner' && results.winner !== 'You',
+      isPlayer: true
+    });
+    
+    // Добавляем ботов
+    results.botChoices.forEach((choice: number, index: number) => {
+      const botName = BOT_NAMES[index];
+      chestSelections[choice].push({
+        name: botName,
+        displayName: botName,
+        number: index + 2,
+        isWinner: results.winner === botName,
+        isLoser: results.winner !== 'No winner' && results.winner !== botName,
+        isPlayer: false
+      });
+    });
+    
+    return (
+      <div className="results-container">
+        {/* Отображаем группы игроков для каждого сундука */}
+        {[1, 2, 3, 4].map(chestNumber => (
+          <div key={chestNumber} className={`chest-result-group chest-group-${chestNumber}`}>
+            {chestSelections[chestNumber].map((player) => {
+              // Определяем класс для рамки
+              let ringClass = 'ring-2 ring-gray-400';
+              if (player.isWinner) ringClass = 'ring-4 ring-green-400 ring-pulse';
+              if (player.isLoser) ringClass = 'ring-4 ring-red-500 opacity-60';
+              
+              return (
+                <div key={player.name} className="player-result">
+                  <div 
+                    className={`player-circle-result
+                      ${player.isPlayer ? 'bg-gray-300' : 'bg-gradient-to-br from-blue-500 to-blue-600'} 
+                      ${ringClass}
+                    `}
+                  >
+                    <span className="text-xl font-bold text-white">{player.number}</span>
+                  </div>
+                  <p className="text-sm font-bold">{player.displayName}</p>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* Показываем обычную сетку только во время игры */}
+      {gameActive && renderPlayersGrid()}
+      
+      {/* Показываем результаты под сундуками когда игра неактивна */}
+      {!gameActive && results && renderPlayersUnderChests()}
+    </>
   );
 };
 

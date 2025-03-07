@@ -19,26 +19,26 @@ function App() {
   const [bank, setBank] = useState<number>(0); // 🌟 БАНК
   const [winStreak, setWinStreak] = useState<{ [key: string]: number }>({
     You: 0,
-    "Bot 1": 0,
-    "Bot 2": 0,
-    "Bot 3": 0,
+    "Алиса": 0,
+    "Олег": 0,
+    "Сири": 0,
   });
 
   // 🌟 Баланс игроков
   const [totalGold, setTotalGold] = useState<{ [key: string]: number }>({
     You: 100,
-    "Bot 1": 100,
-    "Bot 2": 100,
-    "Bot 3": 100,
+    "Алиса": 100,
+    "Олег": 100,
+    "Сири": 100,
   });
 
   const [gameVersion, setGameVersion] = useState<'original' | 'bank' | 'three-players'>('original');
   const [timeLeft, setTimeLeft] = useState(10); // Добавляем время для таймера
   const [playersMadeChoice, setPlayersMadeChoice] = useState<Record<string, boolean>>({
     'You': false,
-    'Bot 1': false,
-    'Bot 2': false,
-    'Bot 3': false
+    'Алиса': false,
+    'Олег': false,
+    'Сири': false
   });
 
   const [playerChoice, setPlayerChoice] = useState<number | null>(null);
@@ -255,9 +255,9 @@ function App() {
       // Если нет победителя, все серии сбрасываются
       setWinStreak({
         'You': 0,
-        'Bot 1': 0,
-        'Bot 2': 0,
-        'Bot 3': 0
+        'Алиса': 0,
+        'Олег': 0,
+        'Сири': 0
       });
     }
   };
@@ -292,6 +292,7 @@ function App() {
         reward,
         playerChoice: chestIndex,
         botChoices,
+        botNames: ['Алиса', 'Олег', 'Сири'] // Добавляем имена ботов в результаты
       };
       
       console.log('Устанавливаем результаты:', results);
@@ -315,11 +316,20 @@ function App() {
     setResults(null);
     setError(null);
     setPlayerChoice(null); // Сбрасываем выбор игрока
+    
+    // Вычитаем стоимость участия у каждого игрока
+    setTotalGold(prev => ({
+      'You': prev['You'] - GAME_COST,
+      'Алиса': prev['Алиса'] - GAME_COST,
+      'Олег': prev['Олег'] - GAME_COST,
+      'Сири': prev['Сири'] - GAME_COST
+    }));
+    
     setPlayersMadeChoice({
       'You': false,
-      'Bot 1': false,
-      'Bot 2': false,
-      'Bot 3': false
+      'Алиса': false,
+      'Олег': false,
+      'Сири': false
     });
     console.log("Начинаем новый раунд");
   };
@@ -359,25 +369,30 @@ function App() {
         
         {gameVersion === 'original' ? (
           <>
-            {/* 🎯 Оригинальная игровая доска */}
-            <GameBoard2 
-              onChestSelect={handleChestSelect} 
-              loading={loading} 
-              gameActive={gameActive} 
-              selectedChest={playerChoice}
-            />
-            
-            {/* Добавляем компонент Players */}
-            <Players 
-              results={results} 
-              timeLeft={timeLeft} 
-              gameActive={gameActive} 
-              playersMadeChoice={playersMadeChoice}
-              setPlayersMadeChoice={setPlayersMadeChoice}
-            />
+            {/* Создаем общий контейнер для игры */}
+            <div className="game-container">
+              {/* 🎯 Оригинальная игровая доска */}
+              <GameBoard2 
+                onChestSelect={handleChestSelect} 
+                loading={loading} 
+                gameActive={gameActive} 
+                selectedChest={playerChoice}
+              />
+              
+              {/* Обертка для компонента Players */}
+              <div className="players-wrapper">
+                <Players 
+                  results={results} 
+                  timeLeft={timeLeft} 
+                  gameActive={gameActive} 
+                  playersMadeChoice={playersMadeChoice}
+                  setPlayersMadeChoice={setPlayersMadeChoice}
+                />
+              </div>
+            </div>
             
             {results && (
-              <div className="flex justify-center mt-6">
+              <div className="flex justify-center -mt-10">
                 <button 
                 className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
                 onClick={startNewRound}
@@ -420,7 +435,7 @@ function App() {
                   <ul className="text-sm text-gray-700 mt-2">
                     <li className="font-semibold">🧑 Вы выбрали сундук {results.playerChoice}</li>
                     {results.botChoices.map((choice: number, index: number) => (
-                      <li key={index}>🤖 Бот {index + 1} выбрал сундук {choice}</li>
+                      <li key={index}>🤖 {results.botNames[index]} выбрал{results.botNames[index] === 'Алиса' ? 'а' : ''} сундук {choice}</li>
                     ))}
                   </ul>
                 </div>
