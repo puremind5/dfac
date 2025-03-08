@@ -320,7 +320,8 @@ function App() {
               showNextPlayer(index + 1);
             }, 2000); // Задержка 2 секунды между игроками
           } else {
-            // Все игроки показаны, теперь показываем обновление банка
+            // Все игроки показаны
+            // Обновление банка показывается вместе с информацией о победителе
             setBankUpdateVisible(true);
           }
         };
@@ -498,7 +499,7 @@ function App() {
             <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
               <h2 className="text-lg font-bold">
                 🏦 Банк: {prevBankValue} монет
-                {lastBankAddition !== null && lastBankAddition > 0 && bankUpdateVisible && (
+                {lastBankAddition !== null && lastBankAddition > 0 && visiblePlayers.length === 4 && (
                   <span className="text-green-600"> +{lastBankAddition} монет</span>
                 )}
               </h2>
