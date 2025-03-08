@@ -149,30 +149,50 @@ const Players: React.FC<PlayersProps> = ({
     return (
       <div className="results-container">
         {/* Отображаем группы игроков для каждого сундука */}
-        {[1, 2, 3, 4].map(chestNumber => (
-          <div key={chestNumber} className={`chest-result-group chest-group-${chestNumber}`}>
-            {chestSelections[chestNumber].map((player) => {
-              // Определяем класс для рамки
-              let ringClass = 'ring-2 ring-gray-400';
-              if (player.isWinner) ringClass = 'ring-4 ring-green-400 ring-pulse';
-              if (player.isLoser) ringClass = 'ring-4 ring-red-500 opacity-60';
-              
-              return (
-                <div key={player.name} className="player-result">
-                  <div 
-                    className={`player-circle-result
-                      ${player.isPlayer ? 'bg-gray-300' : 'bg-gradient-to-br from-blue-500 to-blue-600'} 
-                      ${ringClass}
-                    `}
-                  >
-                    <span className="text-xl font-bold text-white">{player.number}</span>
-                  </div>
-                  <p className="text-sm font-bold">{player.displayName}</p>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+        {[1, 2, 3, 4].map(chestNumber => {
+          // Определяем, сколько игроков выбрали этот сундук
+          const playersCount = chestSelections[chestNumber].length;
+          
+          return (
+            <div key={chestNumber} className={`chest-result-group chest-group-${chestNumber}`}>
+              <div className="overlapping-players-container" style={{ display: 'flex', justifyContent: 'center' }}>
+                {chestSelections[chestNumber].map((player, index) => {
+                  // Определяем класс для рамки
+                  let ringClass = 'ring-2 ring-gray-400';
+                  if (player.isWinner) ringClass = 'ring-4 ring-green-400 ring-pulse';
+                  if (player.isLoser) ringClass = 'ring-4 ring-red-500 opacity-60';
+                  
+                  // Еще более сильное наложение кружков - примерно на 80%
+                  const marginLeftValue = (index > 0 && playersCount > 1) ? '-50px' : '0';
+                  
+                  return (
+                    <div 
+                      key={player.name} 
+                      className="player-result" 
+                      style={{ 
+                        marginLeft: marginLeftValue,
+                        position: 'relative',
+                        zIndex: 10 - index // Для правильного наложения
+                      }}
+                    >
+                      <div 
+                        className={`player-circle-result
+                          ${player.isPlayer ? 'bg-gray-300' : 'bg-gradient-to-br from-blue-500 to-blue-600'} 
+                          ${ringClass}
+                        `}
+                      >
+                        <span className="text-xl font-bold text-white">{player.number}</span>
+                      </div>
+                      <p className="text-sm font-bold" style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}>
+                        {player.displayName}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
