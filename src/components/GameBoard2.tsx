@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../App.css'; // Импортируем стили
 
 const CHEST_VALUES = {
-  1: 10,
-  2: 20,
+  1: 35,
+  2: 50,
   3: 70,
   4: 100
 };
@@ -13,15 +13,19 @@ interface GameBoard2Props {
   loading: boolean;
   gameActive: boolean;
   selectedChest: number | null;
+  playersMadeChoice: Record<string, boolean>;
+  resultsReady: boolean;
 }
 
 const GameBoard2: React.FC<GameBoard2Props> = ({ 
   onChestSelect, 
   loading, 
   gameActive,
-  selectedChest
+  selectedChest,
+  playersMadeChoice,
+  resultsReady
 }) => {
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(7);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -36,7 +40,7 @@ const GameBoard2: React.FC<GameBoard2Props> = ({
   // Сброс таймера при начале нового раунда
   useEffect(() => {
     if (gameActive) {
-      setTimeLeft(10);
+      setTimeLeft(7);
     }
   }, [gameActive]);
 
@@ -50,7 +54,7 @@ const GameBoard2: React.FC<GameBoard2Props> = ({
     <div className="text-center relative z-10">
       <div className="flex items-center justify-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-black">Выберите сундук</h2>
-        <span className="text-xl font-bold text-blue-600">⏱️ {timeLeft}с</span>
+        {gameActive && <span className="text-xl font-bold text-blue-600">⏱️ {timeLeft}с</span>}
       </div>
       <div className="grid grid-cols-4 gap-4 justify-center chests-container">
         {[1, 2, 3, 4].map((chestNumber) => (
