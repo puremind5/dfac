@@ -85,6 +85,9 @@ const Players: React.FC<PlayersProps> = ({
           <span className="text-xl font-bold text-white">1</span>
         </div>
         <p className="mt-2 font-bold">Вы</p>
+        {playersMadeChoice['You'] && (
+          <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
+        )}
       </div>
 
       {/* Боты */}
@@ -102,6 +105,11 @@ const Players: React.FC<PlayersProps> = ({
             <span className="text-xl font-bold text-white">{index + 2}</span>
           </div>
           <p className="mt-2 font-bold">{bot}</p>
+          {playersMadeChoice[bot] && (
+            <p className="text-xs text-green-600 font-medium">
+              {bot === 'Алиса' ? 'Выбрала сундук' : 'Выбрал сундук'}
+            </p>
+          )}
         </div>
       ))}
     </div>
@@ -127,7 +135,8 @@ const Players: React.FC<PlayersProps> = ({
         number: 1,
         isWinner: results.winner === 'You',
         isLoser: results.winner !== 'No winner' && results.winner !== 'You',
-        isPlayer: true
+        isPlayer: true,
+        reward: results.winner === 'You' ? results.reward : 0
       });
     }
     
@@ -141,7 +150,8 @@ const Players: React.FC<PlayersProps> = ({
           number: index + 2,
           isWinner: results.winner === botName,
           isLoser: results.winner !== 'No winner' && results.winner !== botName,
-          isPlayer: false
+          isPlayer: false,
+          reward: results.winner === botName ? results.reward : 0
         });
       }
     });
@@ -186,6 +196,24 @@ const Players: React.FC<PlayersProps> = ({
                       <p className="text-sm font-bold" style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}>
                         {player.displayName}
                       </p>
+                      {/* Отображаем награду под именем, если игрок является победителем */}
+                      {player.isWinner && player.reward > 0 && (
+                        <p 
+                          className="text-xs text-green-600 font-medium" 
+                          style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}
+                        >
+                          +{player.reward}
+                        </p>
+                      )}
+                      {/* Отображаем "-25 монет" красным цветом под именами проигравших */}
+                      {!player.isWinner && (
+                        <p 
+                          className="text-xs text-red-500 font-medium" 
+                          style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}
+                        >
+                          -25
+                        </p>
+                      )}
                     </div>
                   );
                 })}
