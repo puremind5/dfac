@@ -7,6 +7,7 @@ interface PlayersProps {
   gameActive: boolean;
   playersMadeChoice: Record<string, boolean>;
   setPlayersMadeChoice: (value: Record<string, boolean>) => void;
+  visiblePlayers?: string[]; // Список имен игроков, которые должны быть видимы
 }
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
@@ -18,7 +19,8 @@ const Players: React.FC<PlayersProps> = ({
   timeLeft, 
   gameActive, 
   playersMadeChoice,
-  setPlayersMadeChoice 
+  setPlayersMadeChoice,
+  visiblePlayers
 }) => {
   const [botChoices, setBotChoices] = useState<Record<string, boolean>>({
     'Алиса': false,
@@ -117,27 +119,31 @@ const Players: React.FC<PlayersProps> = ({
       4: [] as any[]
     };
     
-    // Добавляем игрока
-    chestSelections[results.playerChoice].push({
-      name: 'You',
-      displayName: 'Вы',
-      number: 1,
-      isWinner: results.winner === 'You',
-      isLoser: results.winner !== 'No winner' && results.winner !== 'You',
-      isPlayer: true
-    });
+    // Добавляем игрока, если он должен быть видим
+    if (!visiblePlayers || visiblePlayers.includes('You')) {
+      chestSelections[results.playerChoice].push({
+        name: 'You',
+        displayName: 'Вы',
+        number: 1,
+        isWinner: results.winner === 'You',
+        isLoser: results.winner !== 'No winner' && results.winner !== 'You',
+        isPlayer: true
+      });
+    }
     
-    // Добавляем ботов
+    // Добавляем ботов, если они должны быть видимы
     results.botChoices.forEach((choice: number, index: number) => {
       const botName = BOT_NAMES[index];
-      chestSelections[choice].push({
-        name: botName,
-        displayName: botName,
-        number: index + 2,
-        isWinner: results.winner === botName,
-        isLoser: results.winner !== 'No winner' && results.winner !== botName,
-        isPlayer: false
-      });
+      if (!visiblePlayers || visiblePlayers.includes(botName)) {
+        chestSelections[choice].push({
+          name: botName,
+          displayName: botName,
+          number: index + 2,
+          isWinner: results.winner === botName,
+          isLoser: results.winner !== 'No winner' && results.winner !== botName,
+          isPlayer: false
+        });
+      }
     });
     
     return (
