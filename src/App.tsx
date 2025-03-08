@@ -52,6 +52,8 @@ function App() {
   const [bankUpdateVisible, setBankUpdateVisible] = useState<boolean>(false);
   // Состояние для хранения предыдущего значения банка (до добавления)
   const [prevBankValue, setPrevBankValue] = useState<number>(0);
+  // Состояние для игрока, который сорвал банк, и суммы выигрыша
+  const [bankJackpot, setBankJackpot] = useState<{player: string, amount: number} | null>(null);
 
   // Эффект для обработки таймера обратного отсчета
   useEffect(() => {
@@ -198,7 +200,7 @@ function App() {
         [winner]: prev[winner] + 1
       }));
       
-      // Сбрасываем серии побед проигравших
+      // Обновляем серии побед проигравших
       setWinStreak(prev => {
         const newStreak = { ...prev };
         Object.keys(newStreak).forEach(player => {
@@ -211,6 +213,9 @@ function App() {
       
       // Если победитель выиграл 3 раза подряд и банк достаточно большой
       if (winStreak[winner] + 1 >= 3 && bank >= BANK_THRESHOLD) {
+        // Запоминаем, кто сорвал банк и сколько выиграл
+        setBankJackpot({player: winner, amount: bank});
+        
         // Выплачиваем банк победителю
         setTotalGold(prev => ({
           ...prev,
@@ -315,14 +320,18 @@ function App() {
             // Показываем игрока и всех предыдущих
             setVisiblePlayers(sortedPlayerNames.slice(0, index + 1));
             
+            // Если это последний игрок, показываем обновление банка вместе с ним
+            if (index === sortedPlayerNames.length - 1) {
+              setBankUpdateVisible(true);
+            }
+            
             // Запускаем таймер для следующего игрока с задержкой 2 секунды
             setTimeout(() => {
               showNextPlayer(index + 1);
             }, 2000); // Задержка 2 секунды между игроками
           } else {
-            // Все игроки показаны
-            // Обновление банка показывается вместе с информацией о победителе
-            setBankUpdateVisible(true);
+            // Все игроки уже показаны, обновление банка уже видимо
+            // Ничего дополнительно делать не нужно
           }
         };
         
@@ -361,6 +370,11 @@ function App() {
       'Сири': prev['Сири'] - GAME_COST
     }));
     
+    setTimeLeft(7); // Сбрасываем таймер на 7 секунд
+    setResultsReady(false); // Сбрасываем готовность результатов
+    setBankUpdateVisible(false); // Сбрасываем видимость обновления банка
+    setBankJackpot(null); // Сбрасываем информацию о джекпоте
+    
     setPlayersMadeChoice({
       'You': false,
       'Алиса': false,
@@ -370,9 +384,6 @@ function App() {
     
     // Сбрасываем информацию о последнем пополнении банка при начале нового раунда
     setLastBankAddition(null);
-    setResultsReady(false); // Сбрасываем состояние готовности результатов
-    
-    setTimeLeft(7); // Устанавливаем 7 секунд вместо 10
     
     console.log("Начинаем новый раунд");
   };
@@ -499,11 +510,17 @@ function App() {
             <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
               <h2 className="text-lg font-bold">
                 🏦 Банк: {prevBankValue} монет
-                {lastBankAddition !== null && lastBankAddition > 0 && visiblePlayers.length === 4 && (
+                {lastBankAddition !== null && lastBankAddition > 0 && visiblePlayers.length === 4 && !bankJackpot && (
                   <span className="text-green-600"> +{lastBankAddition} монет</span>
                 )}
               </h2>
-              {bank >= BANK_THRESHOLD && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+              {bank >= BANK_THRESHOLD && !bankJackpot && <p className="text-red-500 font-semibold">🔥 Банк теперь можно выиграть!</p>}
+              {/* Отображаем сообщение о срыве банка */}
+              {bankJackpot && (
+                <p className="text-red-500 font-bold text-lg jackpot-text">
+                  🔥🔥🔥 {bankJackpot.player === 'You' ? 'Вы сорвали' : `${bankJackpot.player} сорвал${bankJackpot.player === 'Алиса' ? 'а' : ''}`} банк +{bankJackpot.amount} монет 🔥🔥🔥
+                </p>
+              )}
             </div>
 
             {/* 🌟 Общий счёт + текущий раунд (как было) */}

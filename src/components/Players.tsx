@@ -85,8 +85,14 @@ const Players: React.FC<PlayersProps> = ({
           <span className="text-xl font-bold text-white">1</span>
         </div>
         <p className="mt-2 font-bold">Вы</p>
-        {playersMadeChoice['You'] && (
-          <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
+        {gameActive && (
+          <>
+            {playersMadeChoice['You'] ? (
+              <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
+            ) : (
+              <p className="text-xs text-gray-500 font-medium blinking-text">Думает...</p>
+            )}
+          </>
         )}
       </div>
 
@@ -105,10 +111,16 @@ const Players: React.FC<PlayersProps> = ({
             <span className="text-xl font-bold text-white">{index + 2}</span>
           </div>
           <p className="mt-2 font-bold">{bot}</p>
-          {playersMadeChoice[bot] && (
-            <p className="text-xs text-green-600 font-medium">
-              {bot === 'Алиса' ? 'Выбрала сундук' : 'Выбрал сундук'}
-            </p>
+          {gameActive && (
+            <>
+              {playersMadeChoice[bot] ? (
+                <p className="text-xs text-green-600 font-medium">
+                  {bot === 'Алиса' ? 'Выбрала сундук' : 'Выбрал сундук'}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500 font-medium blinking-text">Думает...</p>
+              )}
+            </>
           )}
         </div>
       ))}
@@ -202,7 +214,7 @@ const Players: React.FC<PlayersProps> = ({
                           className="text-xs text-green-600 font-medium" 
                           style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}
                         >
-                          +{player.reward}
+                          ПОБЕДИЛ +{player.reward}
                         </p>
                       )}
                       {/* Отображаем "-25 монет" красным цветом под именами проигравших */}

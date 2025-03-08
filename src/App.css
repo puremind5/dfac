@@ -58,6 +58,22 @@
   }
 }
 
+/* Анимация для мигающего текста "Думает..." */
+@keyframes blink {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* Анимация для сообщения о срыве банка */
+@keyframes jackpotPulse {
+  0% { color: #ef4444; transform: scale(1); }
+  25% { color: #f59e0b; transform: scale(1.05); }
+  50% { color: #ef4444; transform: scale(1); }
+  75% { color: #f59e0b; transform: scale(1.05); }
+  100% { color: #ef4444; transform: scale(1); }
+}
+
 .pulse-animation {
   animation: pulse 1s infinite;
 }
@@ -141,10 +157,6 @@ button:disabled {
 .chest-result-group {
   position: absolute;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 10px;
   min-width: 150px;
 }
 
@@ -165,12 +177,24 @@ button:disabled {
   left: 87.5%;
 }
 
+/* Стиль для стека игроков */
+.player-stack-container {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
 /* Стиль для каждого игрока в результате */
 .player-result {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 10px;
+  transition: transform 0.2s ease;
+}
+
+.player-result:hover {
+  transform: translateY(-5px); /* Небольшая анимация при наведении для лучшего UX */
+  z-index: 20 !important; /* При наведении поднимаем элемент над остальными */
 }
 
 /* Увеличиваем размер кружка до оригинального */
@@ -235,4 +259,14 @@ button:disabled {
 .selected-chest {
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(255, 223, 0, 0.8);
+}
+
+.blinking-text {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Класс для анимации сообщения о срыве банка */
+.jackpot-text {
+  animation: jackpotPulse 2s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 } 
