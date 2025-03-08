@@ -482,8 +482,9 @@ function App() {
               </div>
             </div>
             
-            {results && (
-              <div className="flex justify-center -mt-10">
+            {/* Показываем кнопку "Играть снова" только когда все игроки видны - размещаем над банком */}
+            {results && visiblePlayers.length === 4 && (
+              <div className="flex justify-center mt-4 mb-4">
                 <button 
                 className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
                 onClick={startNewRound}
@@ -492,7 +493,7 @@ function App() {
                 </button>
               </div>
             )}
-
+            
             {/* 🌟 Банк */}
             <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md text-center">
               <h2 className="text-lg font-bold">
@@ -546,18 +547,6 @@ function App() {
                 </div>
               )}
             </div>
-
-            {/* Показываем кнопку "Играть снова" только когда все игроки видны */}
-            {results && visiblePlayers.length === 4 && (
-              <div className="flex justify-center -mt-10">
-                <button 
-                className="px-5 py-3 bg-blue-500 text-white text-lg font-bold rounded-lg shadow-md hover:bg-blue-700 transition"
-                onClick={startNewRound}
-                >
-                🔄 Играть снова
-                </button>
-              </div>
-            )}
 
             {/* 🌟 Описание игры (теперь внизу) */}
             <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
