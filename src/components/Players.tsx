@@ -88,7 +88,7 @@ const Players: React.FC<PlayersProps> = ({
         {gameActive && (
           <>
             {playersMadeChoice['You'] ? (
-              <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
+              <p className="text-xs text-green-600 font-medium">Выбрали сундук</p>
             ) : (
               <p className="text-xs text-gray-500 font-medium blinking-text">СДЕЛАЙТЕ ВЫБОР</p>
             )}
