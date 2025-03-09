@@ -90,7 +90,7 @@ const Players: React.FC<PlayersProps> = ({
             {playersMadeChoice['You'] ? (
               <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
             ) : (
-              <p className="text-xs text-gray-500 font-medium blinking-text">Думает...</p>
+              <p className="text-xs text-gray-500 font-medium blinking-text">СДЕЛАЙТЕ ВЫБОР</p>
             )}
           </>
         )}
@@ -214,7 +214,7 @@ const Players: React.FC<PlayersProps> = ({
                           className="text-xs text-green-600 font-medium" 
                           style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}
                         >
-                          ПОБЕДИЛ +{player.reward}
+                          {player.name === 'You' ? 'ПОБЕДИЛИ! +' + player.reward : 'ПОБЕДИТЕЛЬ! +' + player.reward}
                         </p>
                       )}
                       {/* Отображаем "-25 монет" красным цветом под именами проигравших */}
