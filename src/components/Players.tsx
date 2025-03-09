@@ -214,7 +214,7 @@ const Players: React.FC<PlayersProps> = ({
                           className="text-xs text-green-600 font-medium" 
                           style={{marginLeft: index > 0 && playersCount > 1 ? '50px' : '0'}}
                         >
-                          {player.name === 'You' ? 'ПОБЕДИЛИ! +' + player.reward : 'ПОБЕДИТЕЛЬ! +' + player.reward}
+                          ПОБЕДИТЕЛЬ! +{player.reward}
                         </p>
                       )}
                       {/* Отображаем "-25 монет" красным цветом под именами проигравших */}
