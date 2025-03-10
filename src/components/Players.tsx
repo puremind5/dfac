@@ -8,11 +8,12 @@ interface PlayersProps {
   playersMadeChoice: Record<string, boolean>;
   setPlayersMadeChoice: (value: Record<string, boolean>) => void;
   visiblePlayers?: string[]; // Список имен игроков, которые должны быть видимы
+  activePlayer: 'You' | 'Игрок2'; // Текущий активный игрок
 }
 
 const CHEST_VALUES = { 1: 35, 2: 50, 3: 70, 4: 100 };
 // Имена ботов
-const BOT_NAMES = ['Алиса', 'Олег', 'Сири'];
+const BOT_NAMES = ['Алиса', 'Олег'];
 
 const Players: React.FC<PlayersProps> = ({ 
   results, 
@@ -20,12 +21,12 @@ const Players: React.FC<PlayersProps> = ({
   gameActive, 
   playersMadeChoice,
   setPlayersMadeChoice,
-  visiblePlayers
+  visiblePlayers,
+  activePlayer
 }) => {
   const [botChoices, setBotChoices] = useState<Record<string, boolean>>({
     'Алиса': false,
-    'Олег': false,
-    'Сири': false
+    'Олег': false
   });
   
   // Сброс состояний при начале нового раунда
@@ -33,14 +34,13 @@ const Players: React.FC<PlayersProps> = ({
     if (gameActive) {
       setBotChoices({
         'Алиса': false,
-        'Олег': false,
-        'Сири': false
+        'Олег': false
       });
       setPlayersMadeChoice({
         'You': false,
+        'Игрок2': false,
         'Алиса': false,
-        'Олег': false,
-        'Сири': false
+        'Олег': false
       });
 
       // Боты делают выбор в случайное время в течение таймера
@@ -70,8 +70,8 @@ const Players: React.FC<PlayersProps> = ({
 
   // Во время активной игры показываем обычную сетку
   const renderPlayersGrid = () => (
-    <div className="mt-8 grid grid-cols-4 gap-4 items-center justify-center">
-      {/* Игрок */}
+    <div className="mt-8 flex flex-row flex-wrap gap-4 items-center justify-center">
+      {/* Игрок 1 (You) */}
       <div className="text-center player-container">
         <div className={`player-circle w-16 h-16 mx-auto rounded-full flex items-center justify-center 
           ${!gameActive ? (
@@ -79,7 +79,7 @@ const Players: React.FC<PlayersProps> = ({
             getPlayerResult('You') === 'lose' ? 'bg-gray-300 ring-4 ring-red-500' :
             'bg-gray-300 ring-2 ring-gray-400'
           ) : (
-            playersMadeChoice['You'] ? 'bg-gray-300' : 'bg-blue-500'
+            activePlayer === 'You' ? 'bg-blue-500 ring-4 ring-blue-300 pulse-ring' : 'bg-gray-300'
           )}
           transition-all duration-300`}>
           <span className="text-xl font-bold text-white">1</span>
@@ -90,7 +90,40 @@ const Players: React.FC<PlayersProps> = ({
             {playersMadeChoice['You'] ? (
               <p className="text-xs text-green-600 font-medium">Выбрали сундук</p>
             ) : (
-              <p className="text-xs text-gray-500 font-medium blinking-text">СДЕЛАЙТЕ ВЫБОР</p>
+              activePlayer === 'You' ? (
+                <p className="text-xs text-gray-500 font-medium blinking-text">СДЕЛАЙТЕ ВЫБОР</p>
+              ) : (
+                <p className="text-xs text-gray-500 font-medium">Ожидание хода</p>
+              )
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Игрок 2 */}
+      <div className="text-center player-container">
+        <div className={`player-circle w-16 h-16 mx-auto rounded-full flex items-center justify-center 
+          ${!gameActive ? (
+            getPlayerResult('Игрок2') === 'win' ? 'bg-green-500 ring-4 ring-green-400 ring-pulse' :
+            getPlayerResult('Игрок2') === 'lose' ? 'bg-gray-300 ring-4 ring-red-500' :
+            'bg-gray-300 ring-2 ring-gray-400'
+          ) : (
+            activePlayer === 'Игрок2' ? 'bg-blue-500 ring-4 ring-blue-300 pulse-ring' : 'bg-gray-300'
+          )}
+          transition-all duration-300`}>
+          <span className="text-xl font-bold text-white">2</span>
+        </div>
+        <p className="mt-2 font-bold">Игрок2</p>
+        {gameActive && (
+          <>
+            {playersMadeChoice['Игрок2'] ? (
+              <p className="text-xs text-green-600 font-medium">Выбрал сундук</p>
+            ) : (
+              activePlayer === 'Игрок2' ? (
+                <p className="text-xs text-gray-500 font-medium blinking-text">СДЕЛАЙТЕ ВЫБОР</p>
+              ) : (
+                <p className="text-xs text-gray-500 font-medium">Ожидание хода</p>
+              )
             )}
           </>
         )}
@@ -108,7 +141,7 @@ const Players: React.FC<PlayersProps> = ({
               botChoices[bot] ? 'opacity-50' : ''
             )}
             transition-all duration-300`}>
-            <span className="text-xl font-bold text-white">{index + 2}</span>
+            <span className="text-xl font-bold text-white">{index + 3}</span>
           </div>
           <p className="mt-2 font-bold">{bot}</p>
           {gameActive && (
@@ -139,7 +172,7 @@ const Players: React.FC<PlayersProps> = ({
       4: [] as any[]
     };
     
-    // Добавляем игрока, если он должен быть видим
+    // Добавляем игрока 1, если он должен быть видим
     if (!visiblePlayers || visiblePlayers.includes('You')) {
       chestSelections[results.playerChoice].push({
         name: 'You',
@@ -152,14 +185,27 @@ const Players: React.FC<PlayersProps> = ({
       });
     }
     
+    // Добавляем игрока 2, если он должен быть видим
+    if (!visiblePlayers || visiblePlayers.includes('Игрок2')) {
+      chestSelections[results.player2Choice].push({
+        name: 'Игрок2',
+        displayName: 'Игрок2',
+        number: 2,
+        isWinner: results.winner === 'Игрок2',
+        isLoser: results.winner !== 'No winner' && results.winner !== 'Игрок2',
+        isPlayer: true,
+        reward: results.winner === 'Игрок2' ? results.reward : 0
+      });
+    }
+    
     // Добавляем ботов, если они должны быть видимы
     results.botChoices.forEach((choice: number, index: number) => {
-      const botName = BOT_NAMES[index];
+      const botName = results.botNames[index];
       if (!visiblePlayers || visiblePlayers.includes(botName)) {
         chestSelections[choice].push({
           name: botName,
           displayName: botName,
-          number: index + 2,
+          number: index + 3,
           isWinner: results.winner === botName,
           isLoser: results.winner !== 'No winner' && results.winner !== botName,
           isPlayer: false,

@@ -3,6 +3,7 @@ import { Trash as Treasure } from 'lucide-react';
 import GameBoard2 from './components/GameBoard2';
 import BankGame from './BankGame';
 import ThreePlayersGame from './ThreePlayersGame';
+import MultiplayerGame from './MultiplayerGame';
 import Players from './components/Players';
 import axios from 'axios';
 import './App.css';
@@ -33,7 +34,8 @@ function App() {
     "Сири": 100,
   });
 
-  const [gameVersion, setGameVersion] = useState<'original' | 'bank' | 'three-players'>('original');
+  // Тип игры (теперь по умолчанию 'multiplayer')
+  const [gameVersion, setGameVersion] = useState<'original' | 'bank' | 'three-players' | 'multiplayer'>('multiplayer');
   const [timeLeft, setTimeLeft] = useState(7); // Изменяем начальное время с 10 на 7 секунд
   const [playersMadeChoice, setPlayersMadeChoice] = useState<Record<string, boolean>>({
     'You': false,
@@ -448,7 +450,7 @@ function App() {
         {/* Переключатель версий игры */}
         <div className="flex justify-center mt-4 mb-4">
           <button 
-            className={`px-4 py-2 ${gameVersion === 'original' ? 'bg-blue-600 text-white' : 'bg-gray-200'} ${gameVersion === 'original' ? '' : 'rounded-l-lg'}`}
+            className={`px-4 py-2 ${gameVersion === 'original' ? 'bg-blue-600 text-white' : 'bg-gray-200'} rounded-l-lg`}
             onClick={() => setGameVersion('original')}
           >
             Оригинальная игра
@@ -460,10 +462,16 @@ function App() {
             Игра с БАНКОМ
           </button>
           <button 
-            className={`px-4 py-2 ${gameVersion === 'three-players' ? 'bg-blue-600 text-white' : 'bg-gray-200'} ${gameVersion === 'three-players' ? '' : 'rounded-r-lg'}`}
+            className={`px-4 py-2 ${gameVersion === 'three-players' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
             onClick={() => setGameVersion('three-players')}
           >
             3 игрока / 3 сундука
+          </button>
+          <button 
+            className={`px-4 py-2 ${gameVersion === 'multiplayer' ? 'bg-blue-600 text-white' : 'bg-gray-200'} rounded-r-lg`}
+            onClick={() => setGameVersion('multiplayer')}
+          >
+            Мультиплеер
           </button>
         </div>
         
@@ -583,8 +591,10 @@ function App() {
           </>
         ) : gameVersion === 'bank' ? (
           <BankGame />
-        ) : (
+        ) : gameVersion === 'three-players' ? (
           <ThreePlayersGame />
+        ) : (
+          <MultiplayerGame />
         )}
       </div>
     </div>
