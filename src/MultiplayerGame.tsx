@@ -35,7 +35,7 @@ const MultiplayerGame: React.FC = () => {
   });
 
   const [timeLeft, setTimeLeft] = useState(7);
-  const [activePlayer, setActivePlayer] = useState<'You' | 'Игрок2'>('You'); // Активный игрок
+  const [activePlayer, setActivePlayer] = useState<'You' | 'Игрок2'>('Игрок2'); // Изначально активен Игрок2
   const [playersMadeChoice, setPlayersMadeChoice] = useState<Record<string, boolean>>({
     'You': false,
     'Игрок2': false,
@@ -79,19 +79,7 @@ const MultiplayerGame: React.FC = () => {
     console.log(`${activePlayer} выбрал сундук:`, chestIndex);
 
     // Сохраняем выбор активного игрока
-    if (activePlayer === 'You') {
-      setPlayerChoice(chestIndex);
-      
-      // Отмечаем, что первый игрок сделал выбор
-      setPlayersMadeChoice(prev => ({
-        ...prev,
-        'You': true
-      }));
-      
-      // Переключаемся на второго игрока
-      setActivePlayer('Игрок2');
-      setTimeLeft(7); // Сбрасываем таймер для второго игрока
-    } else if (activePlayer === 'Игрок2') {
+    if (activePlayer === 'Игрок2') {
       setPlayer2Choice(chestIndex);
       
       // Отмечаем, что второй игрок сделал выбор
@@ -100,8 +88,20 @@ const MultiplayerGame: React.FC = () => {
         'Игрок2': true
       }));
       
+      // Переключаемся на первого игрока
+      setActivePlayer('You');
+      setTimeLeft(7); // Сбрасываем таймер для первого игрока
+    } else if (activePlayer === 'You') {
+      setPlayerChoice(chestIndex);
+      
+      // Отмечаем, что первый игрок сделал выбор
+      setPlayersMadeChoice(prev => ({
+        ...prev,
+        'You': true
+      }));
+      
       // Оба игрока сделали выбор, завершаем раунд
-      finishRound(chestIndex);
+      finishRound(player2Choice || 1);
     }
   };
 
@@ -363,7 +363,7 @@ const MultiplayerGame: React.FC = () => {
     setError(null);
     setPlayerChoice(null); // Сбрасываем выбор первого игрока
     setPlayer2Choice(null); // Сбрасываем выбор второго игрока
-    setActivePlayer('You'); // Ход начинается с первого игрока
+    setActivePlayer('Игрок2'); // Ход начинается со второго игрока
     
     // Обновляем состояние prevBankValue текущим значением банка
     setPrevBankValue(bank);

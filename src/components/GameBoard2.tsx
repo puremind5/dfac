@@ -84,11 +84,11 @@ const GameBoard2: React.FC<GameBoard2Props> = ({
         ))}
       </div>
       {loading && <p className="mt-4 text-gray-300">Открываем сундук...</p>}
-      {activePlayer === 'You' && playersMadeChoice['You'] && (
-        <p className="mt-4 text-green-600 font-bold">Вы сделали выбор. Ход переходит к Игроку 2.</p>
-      )}
       {activePlayer === 'Игрок2' && playersMadeChoice['Игрок2'] && (
-        <p className="mt-4 text-green-600 font-bold">Игрок 2 сделал выбор. Раунд завершается...</p>
+        <p className="mt-4 text-green-600 font-bold">Игрок 2 сделал выбор. Теперь ваш ход.</p>
+      )}
+      {activePlayer === 'You' && playersMadeChoice['You'] && (
+        <p className="mt-4 text-green-600 font-bold">Вы сделали выбор. Раунд завершается...</p>
       )}
     </div>
   );
