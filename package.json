@@ -13,15 +13,21 @@
   },
   "dependencies": {
     "@netlify/functions": "^3.0.0",
+    "@types/axios": "^0.9.36",
+    "@types/react-router-dom": "^5.3.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "framer-motion": "^12.5.0",
+    "lightweight-charts": "^4.1.1",
     "lucide-react": "^0.344.0",
-    "react": "^18.3.1", 
+    "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.3.0",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/node": "^22.13.10",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
