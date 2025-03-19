@@ -249,120 +249,72 @@ const PriceChart: React.FC<PriceChartProps> = ({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ 
-        padding: '10px', 
-        backgroundColor: '#1a0b2e', 
-        borderBottom: '1px solid #2c1b4d',
-        display: 'flex',
-        gap: '10px',
-        alignItems: 'center',
-        flexWrap: 'wrap'
-      }}>
-        <button
-          onClick={handlePauseToggle}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: isPaused ? '#26a69a' : '#ef5350',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          {isPaused ? 'Продолжить' : 'Пауза'}
-        </button>
+    <div className="flex flex-col gap-4">
+      {/* График */}
+      <div ref={chartContainerRef} className="w-full" />
 
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {TRADING_PAIRS.map(pair => (
+      {/* Панель управления */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#1a0b2e] border-t border-[#2c1b4d] p-2 sm:p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-wrap gap-2 justify-center items-center">
+            {/* Пауза */}
             <button
-              key={pair.symbol}
-              onClick={() => handlePairChange(pair.symbol)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: selectedPair === pair.symbol ? '#00f0ff' : '#2c1b4d',
-                color: selectedPair === pair.symbol ? '#1a0b2e' : '#00f0ff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
+              onClick={handlePauseToggle}
+              className={`px-4 py-2 rounded-lg font-bold ${
+                isPaused
+                  ? 'bg-gradient-to-r from-red-500 to-[#ff1f8f] text-white'
+                  : 'bg-gradient-to-r from-green-500 to-[#00f0ff] text-white'
+              }`}
             >
-              {pair.name}
+              {isPaused ? 'Пауза' : 'Старт'}
             </button>
-          ))}
-        </div>
 
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {TIMEFRAMES.map(tf => (
-            <button
-              key={tf.value}
-              onClick={() => handleTimeframeChange(tf.value)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: selectedTimeframe === tf.value ? '#00f0ff' : '#2c1b4d',
-                color: selectedTimeframe === tf.value ? '#1a0b2e' : '#00f0ff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              {tf.name}
-            </button>
-          ))}
-        </div>
+            {/* Криптовалюты */}
+            {TRADING_PAIRS.map(pair => (
+              <button
+                key={pair.symbol}
+                onClick={() => handlePairChange(pair.symbol)}
+                className={`px-4 py-2 rounded-lg font-bold ${
+                  selectedPair === pair.symbol
+                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+                }`}
+              >
+                {pair.name}
+              </button>
+            ))}
 
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {SPEEDS.map(speed => (
-            <button
-              key={speed.value}
-              onClick={() => handleSpeedChange(speed.value)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: selectedSpeed === speed.value ? '#00f0ff' : '#2c1b4d',
-                color: selectedSpeed === speed.value ? '#1a0b2e' : '#00f0ff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              {speed.name}
-            </button>
-          ))}
-        </div>
+            {/* Таймфреймы */}
+            {TIMEFRAMES.map(tf => (
+              <button
+                key={tf.value}
+                onClick={() => handleTimeframeChange(tf.value)}
+                className={`px-4 py-2 rounded-lg font-bold ${
+                  selectedTimeframe === tf.value
+                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+                }`}
+              >
+                {tf.name}
+              </button>
+            ))}
 
-        <div style={{ 
-          marginLeft: 'auto',
-          color: '#00f0ff',
-          fontSize: '18px',
-          fontWeight: 'bold'
-        }}>
-          {currentPrice} USDT
-        </div>
-      </div>
-
-      <div 
-        ref={chartContainerRef} 
-        style={{ 
-          flex: 1,
-          position: 'relative'
-        }} 
-      >
-        {isLoading && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: '#00f0ff',
-            fontSize: '16px'
-          }}>
-            Загрузка данных...
+            {/* Скорость */}
+            {SPEEDS.map(speed => (
+              <button
+                key={speed.value}
+                onClick={() => handleSpeedChange(speed.value)}
+                className={`px-4 py-2 rounded-lg font-bold ${
+                  selectedSpeed === speed.value
+                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+                }`}
+              >
+                {speed.name}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

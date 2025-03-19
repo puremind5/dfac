@@ -113,7 +113,7 @@ const TradingPage: React.FC = () => {
   }, [gameOver, points, score, successStreak, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-2 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-2 sm:p-6 pb-32">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 sm:mb-8">
         <div className="cyberpunk-border p-2 sm:p-4 w-full sm:w-auto">
@@ -142,9 +142,9 @@ const TradingPage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Chart Container */}
-        <div ref={containerRef} className="lg:col-span-2 cyberpunk-border p-2 sm:p-4">
+        <div ref={containerRef} className="cyberpunk-border p-2 sm:p-4 lg:flex-[2]">
           <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Price Chart</h3>
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <PriceChart 
@@ -156,14 +156,14 @@ const TradingPage: React.FC = () => {
         </div>  
 
         {/* Trading Controls */}
-        <div className="cyberpunk-border p-2 sm:p-4">
+        <div className="cyberpunk-border p-2 sm:p-4 lg:flex-1">
           <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Make Your Prediction</h3>
           <div className="space-y-2 sm:space-y-4">
-            <div className="flex gap-2 sm:gap-4">
+            <div className="flex lg:flex-col gap-2 sm:gap-4">
               <button 
                 onClick={() => handlePrediction('UP')}
                 disabled={!canMakeNewPrediction}
-                className={`w-1/2 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white 
+                className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white 
                            ${canMakeNewPrediction 
                              ? 'shadow-[0_0_10px_rgba(0,240,255,0.3)] hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]' 
                              : 'opacity-50 cursor-not-allowed'} 
@@ -174,7 +174,7 @@ const TradingPage: React.FC = () => {
               <button 
                 onClick={() => handlePrediction('DOWN')}
                 disabled={!canMakeNewPrediction}
-                className={`w-1/2 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white 
+                className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white 
                            ${canMakeNewPrediction 
                              ? 'shadow-[0_0_10px_rgba(255,31,143,0.3)] hover:shadow-[0_0_20px_rgba(255,31,143,0.5)]' 
                              : 'opacity-50 cursor-not-allowed'} 
@@ -223,7 +223,7 @@ const TradingPage: React.FC = () => {
               )}
 
               {/* Past Predictions */}
-              <div className="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
+              <div className="space-y-2 max-h-32 lg:max-h-[calc(100vh-600px)] overflow-y-auto">
                 {predictionLogs.map((log, index) => (
                   <div 
                     key={log.timestamp}
