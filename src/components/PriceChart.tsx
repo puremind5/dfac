@@ -6,6 +6,21 @@ interface PriceChartProps {
   containerWidth?: number;
   containerHeight?: number;
   onCandleUpdate?: (currentCandle: CandleData, nextCandle: CandleData | null) => void;
+  isPaused: boolean;
+  selectedPair: string;
+  selectedTimeframe: string;
+  selectedSpeed: number;
+}
+
+interface ControlPanelProps {
+  isPaused: boolean;
+  selectedPair: string;
+  selectedTimeframe: string;
+  selectedSpeed: number;
+  onPauseToggle: () => void;
+  onPairChange: (pair: string) => void;
+  onTimeframeChange: (timeframe: string) => void;
+  onSpeedChange: (speed: number) => void;
 }
 
 const CRYPTO_COMPARE_API = 'https://min-api.cryptocompare.com/data/v2';
@@ -31,10 +46,88 @@ const SPEEDS = [
   { value: 2000, name: '2с' },
 ];
 
+export const ControlPanel: React.FC<ControlPanelProps> = ({
+  isPaused,
+  selectedPair,
+  selectedTimeframe,
+  selectedSpeed,
+  onPauseToggle,
+  onPairChange,
+  onTimeframeChange,
+  onSpeedChange,
+}) => {
+  return (
+    <div className="bg-[#2c1b4d] p-2 sm:p-4 rounded-lg">
+      <div className="flex flex-wrap gap-2 justify-center items-center">
+        {/* Пауза */}
+        <button
+          onClick={onPauseToggle}
+          className={`px-4 py-2 rounded-lg font-bold ${
+            isPaused
+              ? 'bg-gradient-to-r from-red-500 to-[#ff1f8f] text-white'
+              : 'bg-gradient-to-r from-green-500 to-[#00f0ff] text-white'
+          }`}
+        >
+          {isPaused ? 'Пауза' : 'Старт'}
+        </button>
+
+        {/* Криптовалюты */}
+        {TRADING_PAIRS.map(pair => (
+          <button
+            key={pair.symbol}
+            onClick={() => onPairChange(pair.symbol)}
+            className={`px-4 py-2 rounded-lg font-bold ${
+              selectedPair === pair.symbol
+                ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+            }`}
+          >
+            {pair.name}
+          </button>
+        ))}
+
+        {/* Таймфреймы */}
+        {TIMEFRAMES.map(tf => (
+          <button
+            key={tf.value}
+            onClick={() => onTimeframeChange(tf.value)}
+            className={`px-4 py-2 rounded-lg font-bold ${
+              selectedTimeframe === tf.value
+                ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+            }`}
+          >
+            {tf.name}
+          </button>
+        ))}
+
+        {/* Скорость */}
+        {SPEEDS.map(speed => (
+          <button
+            key={speed.value}
+            onClick={() => onSpeedChange(speed.value)}
+            className={`px-4 py-2 rounded-lg font-bold ${
+              selectedSpeed === speed.value
+                ? 'bg-[#00f0ff] text-[#1a0b2e]'
+                : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
+            }`}
+          >
+            {speed.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const PriceChart: React.FC<PriceChartProps> = ({ 
   containerWidth = 1200, 
   containerHeight = 600,
-  onCandleUpdate
+  onCandleUpdate,
+  isPaused,
+  selectedPair,
+  selectedTimeframe,
+  selectedSpeed
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
@@ -45,10 +138,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
   const allCandlesRef = useRef<CandleData[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
-  const [selectedPair, setSelectedPair] = useState('BTC');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('minute');
-  const [selectedSpeed, setSelectedSpeed] = useState(500);
   const [currentPrice, setCurrentPrice] = useState<string>('');
 
   // Создаем график только при монтировании компонента
@@ -231,21 +320,19 @@ const PriceChart: React.FC<PriceChartProps> = ({
   }, [isPaused, selectedSpeed, onCandleUpdate]);
 
   const handlePauseToggle = () => {
-    setIsPaused(!isPaused);
+    // Implement pause toggle logic
   };
 
   const handlePairChange = (pair: string) => {
-    setSelectedPair(pair);
-    currentIndexRef.current = 10;
+    // Implement pair change logic
   };
 
   const handleTimeframeChange = (timeframe: string) => {
-    setSelectedTimeframe(timeframe);
-    currentIndexRef.current = 10;
+    // Implement timeframe change logic
   };
 
   const handleSpeedChange = (speed: number) => {
-    setSelectedSpeed(speed);
+    // Implement speed change logic
   };
 
   return (
@@ -253,69 +340,17 @@ const PriceChart: React.FC<PriceChartProps> = ({
       {/* График */}
       <div ref={chartContainerRef} className="w-full" />
 
-      {/* Панель управления */}
-      <div className="bg-[#1a0b2e] border-t border-[#2c1b4d] p-2 sm:p-4 rounded-lg">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-2 justify-center items-center">
-            {/* Пауза */}
-            <button
-              onClick={handlePauseToggle}
-              className={`px-4 py-2 rounded-lg font-bold ${
-                isPaused
-                  ? 'bg-gradient-to-r from-red-500 to-[#ff1f8f] text-white'
-                  : 'bg-gradient-to-r from-green-500 to-[#00f0ff] text-white'
-              }`}
-            >
-              {isPaused ? 'Пауза' : 'Старт'}
-            </button>
-
-            {/* Криптовалюты */}
-            {TRADING_PAIRS.map(pair => (
-              <button
-                key={pair.symbol}
-                onClick={() => handlePairChange(pair.symbol)}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  selectedPair === pair.symbol
-                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
-                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
-                }`}
-              >
-                {pair.name}
-              </button>
-            ))}
-
-            {/* Таймфреймы */}
-            {TIMEFRAMES.map(tf => (
-              <button
-                key={tf.value}
-                onClick={() => handleTimeframeChange(tf.value)}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  selectedTimeframe === tf.value
-                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
-                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
-                }`}
-              >
-                {tf.name}
-              </button>
-            ))}
-
-            {/* Скорость */}
-            {SPEEDS.map(speed => (
-              <button
-                key={speed.value}
-                onClick={() => handleSpeedChange(speed.value)}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  selectedSpeed === speed.value
-                    ? 'bg-[#00f0ff] text-[#1a0b2e]'
-                    : 'bg-[#2c1b4d] text-[#00f0ff] hover:bg-[#3d2b5e]'
-                }`}
-              >
-                {speed.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Экспортируем состояние и обработчики для панели управления */}
+      <ControlPanel
+        isPaused={isPaused}
+        selectedPair={selectedPair}
+        selectedTimeframe={selectedTimeframe}
+        selectedSpeed={selectedSpeed}
+        onPauseToggle={handlePauseToggle}
+        onPairChange={handlePairChange}
+        onTimeframeChange={handleTimeframeChange}
+        onSpeedChange={handleSpeedChange}
+      />
     </div>
   );
 };

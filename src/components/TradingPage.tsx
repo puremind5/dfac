@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PriceChart from './PriceChart';
+import PriceChart, { ControlPanel } from './PriceChart';
 import { CandleData, PredictionType } from '../types/trading';
 
 interface PredictionLog {
@@ -24,6 +24,12 @@ const TradingPage: React.FC = () => {
   const [canMakeNewPrediction, setCanMakeNewPrediction] = useState(true);
   const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
   const [gameOver, setGameOver] = useState(false);
+
+  // Состояния для панели управления
+  const [isPaused, setIsPaused] = useState(false);
+  const [selectedPair, setSelectedPair] = useState('BTC');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('minute');
+  const [selectedSpeed, setSelectedSpeed] = useState(500);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -142,106 +148,128 @@ const TradingPage: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-        {/* Chart Container */}
-        <div ref={containerRef} className="cyberpunk-border p-2 sm:p-4 lg:flex-[2]">
-          <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Price Chart</h3>
-          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            <PriceChart 
-              containerWidth={chartDimensions.width} 
-              containerHeight={window.innerWidth < 640 ? 300 : chartDimensions.height}
-              onCandleUpdate={handleCandleUpdate}
-            />
-          </div>
-        </div>  
-
-        {/* Trading Controls */}
-        <div className="cyberpunk-border p-2 sm:p-4 lg:flex-1">
-          <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Make Your Prediction</h3>
-          <div className="space-y-2 sm:space-y-4">
-            <div className="flex lg:flex-col gap-2 sm:gap-4">
-              <button 
-                onClick={() => handlePrediction('UP')}
-                disabled={!canMakeNewPrediction}
-                className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white 
-                           ${canMakeNewPrediction 
-                             ? 'shadow-[0_0_10px_rgba(0,240,255,0.3)] hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]' 
-                             : 'opacity-50 cursor-not-allowed'} 
-                           transition-all`}
-              >
-                UP {currentPrediction === 'UP' && '✓'}
-              </button>
-              <button 
-                onClick={() => handlePrediction('DOWN')}
-                disabled={!canMakeNewPrediction}
-                className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white 
-                           ${canMakeNewPrediction 
-                             ? 'shadow-[0_0_10px_rgba(255,31,143,0.3)] hover:shadow-[0_0_20px_rgba(255,31,143,0.5)]' 
-                             : 'opacity-50 cursor-not-allowed'} 
-                           transition-all`}
-              >
-                DOWN {currentPrediction === 'DOWN' && '✓'}
-              </button>
+      <div className="flex flex-col gap-4 sm:gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+          {/* Chart Container */}
+          <div ref={containerRef} className="cyberpunk-border p-2 sm:p-4 lg:flex-[2]">
+            <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Price Chart</h3>
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+              <PriceChart 
+                containerWidth={chartDimensions.width} 
+                containerHeight={window.innerWidth < 640 ? 300 : chartDimensions.height}
+                onCandleUpdate={handleCandleUpdate}
+                isPaused={isPaused}
+                selectedPair={selectedPair}
+                selectedTimeframe={selectedTimeframe}
+                selectedSpeed={selectedSpeed}
+              />
             </div>
+          </div>  
 
-            {/* Progress Bar */}
-            <div className="mt-3 sm:mt-6">
-              <div className="relative h-6 sm:h-8 bg-gray-800 rounded-lg overflow-hidden">
-                {/* Центральная линия */}
-                <div className="absolute top-0 left-1/2 w-[2px] h-full bg-gray-600"></div>
-                
-                {/* Полоска прогресса */}
-                <div 
-                  className={`absolute top-0 h-full transition-all duration-500 ${
-                    isPositive ? 'left-1/2 bg-green-500' : 'right-1/2 bg-red-500'
-                  }`}
-                  style={{ 
-                    width: `${progressWidth}%`,
-                    boxShadow: `0 0 20px ${isPositive ? '#00ff00' : '#ff0000'}`
-                  }}
-                ></div>
+          {/* Trading Controls */}
+          <div className="cyberpunk-border p-2 sm:p-4 lg:flex-1">
+            <h3 className="neon-text text-base sm:text-lg mb-2 sm:mb-4">Make Your Prediction</h3>
+            <div className="space-y-2 sm:space-y-4">
+              <div className="flex lg:flex-col gap-2 sm:gap-4">
+                <button 
+                  onClick={() => handlePrediction('UP')}
+                  disabled={!canMakeNewPrediction}
+                  className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white 
+                             ${canMakeNewPrediction 
+                               ? 'shadow-[0_0_10px_rgba(0,240,255,0.3)] hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]' 
+                               : 'opacity-50 cursor-not-allowed'} 
+                             transition-all`}
+                >
+                  UP {currentPrediction === 'UP' && '✓'}
+                </button>
+                <button 
+                  onClick={() => handlePrediction('DOWN')}
+                  disabled={!canMakeNewPrediction}
+                  className={`w-1/2 lg:w-full py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white 
+                             ${canMakeNewPrediction 
+                               ? 'shadow-[0_0_10px_rgba(255,31,143,0.3)] hover:shadow-[0_0_20px_rgba(255,31,143,0.5)]' 
+                               : 'opacity-50 cursor-not-allowed'} 
+                             transition-all`}
+                >
+                  DOWN {currentPrediction === 'DOWN' && '✓'}
+                </button>
               </div>
-              <div className="flex justify-between mt-1 text-xs sm:text-sm">
-                <span className="text-red-400">Losses</span>
-                <span className="text-green-400">Wins</span>
-              </div>
-            </div>
 
-            {/* Prediction Logs */}
-            <div className="mt-3 sm:mt-6 p-2 sm:p-4 bg-[#2c1b4d] rounded-lg">
-              <h4 className="text-[#00f0ff] text-xs sm:text-sm mb-2">Prediction Logs</h4>
-              
-              {/* Current Prediction */}
-              {currentPrediction && (
-                <div className="text-xs sm:text-sm p-2 mb-2 rounded bg-blue-900/30 text-blue-400">
-                  <span className="font-mono">
-                    {new Date().toLocaleTimeString()} →
-                  </span>
-                  {' '}
-                  Current: <span className="font-bold">{currentPrediction}</span>
-                </div>
-              )}
-
-              {/* Past Predictions */}
-              <div className="space-y-2 max-h-32 lg:max-h-[calc(100vh-600px)] overflow-y-auto">
-                {predictionLogs.map((log, index) => (
+              {/* Progress Bar */}
+              <div className="mt-3 sm:mt-6">
+                <div className="relative h-6 sm:h-8 bg-gray-800 rounded-lg overflow-hidden">
+                  {/* Центральная линия */}
+                  <div className="absolute top-0 left-1/2 w-[2px] h-full bg-gray-600"></div>
+                  
+                  {/* Полоска прогресса */}
                   <div 
-                    key={log.timestamp}
-                    className={`text-xs sm:text-sm p-2 rounded ${
-                      log.isCorrect 
-                        ? 'bg-green-900/30 text-green-400' 
-                        : 'bg-red-900/30 text-red-400'
+                    className={`absolute top-0 h-full transition-all duration-500 ${
+                      isPositive ? 'left-1/2 bg-green-500' : 'right-1/2 bg-red-500'
                     }`}
-                  >
+                    style={{ 
+                      width: `${progressWidth}%`,
+                      boxShadow: `0 0 20px ${isPositive ? '#00ff00' : '#ff0000'}`
+                    }}
+                  ></div>
+                </div>
+                <div className="flex justify-between mt-1 text-xs sm:text-sm">
+                  <span className="text-red-400">Losses</span>
+                  <span className="text-green-400">Wins</span>
+                </div>
+              </div>
+
+              {/* Prediction Logs */}
+              <div className="mt-3 sm:mt-6 p-2 sm:p-4 bg-[#2c1b4d] rounded-lg">
+                <h4 className="text-[#00f0ff] text-xs sm:text-sm mb-2">Prediction Logs</h4>
+                
+                {/* Current Prediction */}
+                {currentPrediction && (
+                  <div className="text-xs sm:text-sm p-2 mb-2 rounded bg-blue-900/30 text-blue-400">
                     <span className="font-mono">
-                      {new Date(log.timestamp).toLocaleTimeString()} →
+                      {new Date().toLocaleTimeString()} →
                     </span>
                     {' '}
-                    {log.prediction} → {log.result} {log.isCorrect ? '✓' : '✗'}
+                    Current: <span className="font-bold">{currentPrediction}</span>
                   </div>
-                ))}
+                )}
+
+                {/* Past Predictions */}
+                <div className="space-y-2 max-h-32 lg:max-h-[calc(100vh-600px)] overflow-y-auto">
+                  {predictionLogs.map((log, index) => (
+                    <div 
+                      key={log.timestamp}
+                      className={`text-xs sm:text-sm p-2 rounded ${
+                        log.isCorrect 
+                          ? 'bg-green-900/30 text-green-400' 
+                          : 'bg-red-900/30 text-red-400'
+                      }`}
+                    >
+                      <span className="font-mono">
+                        {new Date(log.timestamp).toLocaleTimeString()} →
+                      </span>
+                      {' '}
+                      {log.prediction} → {log.result} {log.isCorrect ? '✓' : '✗'}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Control Panel */}
+        <div className="cyberpunk-border p-2 sm:p-4 mt-4">
+          <div className="flex flex-wrap gap-2 justify-center items-center">
+            <ControlPanel 
+              isPaused={isPaused}
+              selectedPair={selectedPair}
+              selectedTimeframe={selectedTimeframe}
+              selectedSpeed={selectedSpeed}
+              onPauseToggle={() => setIsPaused(!isPaused)}
+              onPairChange={setSelectedPair}
+              onTimeframeChange={setSelectedTimeframe}
+              onSpeedChange={setSelectedSpeed}
+            />
           </div>
         </div>
       </div>
