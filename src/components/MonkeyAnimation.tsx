@@ -116,7 +116,7 @@ const MonkeyAnimation: React.FC<MonkeyAnimationProps> = ({ onCorrectPrediction }
             key={banana.id}
             className={`absolute left-1/2 ${banana.fallen ? '' : 'animate-dropBanana'}`}
             style={{
-              transform: 'translateX(-50%)',
+              transform: 'translateX(-50%) translateX(80px)',
               bottom: banana.fallen ? '35px' : 'auto',
               top: banana.fallen ? 'auto' : '-20px',
               zIndex: banana.fallen ? 1 : 2

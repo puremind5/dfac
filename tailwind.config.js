@@ -17,14 +17,14 @@ export default {
         },
         dropBanana: {
           '0%': { 
-            transform: 'translateX(-50%) translateY(0)',
+            transform: 'translateX(-50%) translateX(80px) translateY(0)',
             opacity: '0'
           },
           '20%': {
             opacity: '1'
           },
           '100%': { 
-            transform: 'translateX(-50%) translateY(140px)',
+            transform: 'translateX(-50%) translateX(80px) translateY(140px)',
             opacity: '1'
           }
         }
