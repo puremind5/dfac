@@ -1,31 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, Time } from 'lightweight-charts';
+import { CandleData } from '../types/trading';
 
 interface PriceChartProps {
   containerWidth?: number;
   containerHeight?: number;
+  onCandleUpdate?: (currentCandle: CandleData, nextCandle: CandleData | null) => void;
 }
 
-interface CandleData {
-  time: Time;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
+const CRYPTO_COMPARE_API = 'https://min-api.cryptocompare.com/data/v2';
 
 const TRADING_PAIRS = [
-  { symbol: 'BTCUSDT', name: 'Bitcoin' },
-  { symbol: 'ETHUSDT', name: 'Ethereum' },
-  { symbol: 'BNBUSDT', name: 'Binance Coin' },
-  { symbol: 'SOLUSDT', name: 'Solana' },
+  { symbol: 'BTC', name: 'Bitcoin' },
+  { symbol: 'ETH', name: 'Ethereum' },
+  { symbol: 'BNB', name: 'Binance Coin' },
+  { symbol: 'SOL', name: 'Solana' },
 ];
 
 const TIMEFRAMES = [
-  { value: '1m', name: '1 мин' },
-  { value: '5m', name: '5 мин' },
-  { value: '15m', name: '15 мин' },
-  { value: '1h', name: '1 час' },
+  { value: 'minute', name: '1 мин' },
+  { value: 'minute5', name: '5 мин' },
+  { value: 'minute15', name: '15 мин' },
+  { value: 'hour', name: '1 час' },
 ];
 
 const SPEEDS = [
@@ -37,20 +33,30 @@ const SPEEDS = [
 
 const PriceChart: React.FC<PriceChartProps> = ({ 
   containerWidth = 1200, 
-  containerHeight = 600 
+  containerHeight = 600,
+  onCandleUpdate
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<any>(null);
+  const candlestickSeriesRef = useRef<any>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isActiveRef = useRef(true);
+  const currentIndexRef = useRef(10);
+  const allCandlesRef = useRef<CandleData[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedPair, setSelectedPair] = useState('BTCUSDT');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1m');
+  const [selectedPair, setSelectedPair] = useState('BTC');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('minute');
   const [selectedSpeed, setSelectedSpeed] = useState(500);
   const [currentPrice, setCurrentPrice] = useState<string>('');
 
+  // Создаем график только при монтировании компонента
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || chartRef.current) return;
 
-    // Создаем график
+    isActiveRef.current = true;
+    
     const chart = createChart(chartContainerRef.current, {
       width: containerWidth,
       height: containerHeight,
@@ -95,8 +101,10 @@ const PriceChart: React.FC<PriceChartProps> = ({
       },
     });
 
+    chartRef.current = chart;
+
     // Создаем серию свечей
-    const candlestickSeries = chart.addCandlestickSeries({
+    candlestickSeriesRef.current = chart.addCandlestickSeries({
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
@@ -104,50 +112,69 @@ const PriceChart: React.FC<PriceChartProps> = ({
       wickDownColor: '#ef5350',
     });
 
-    let allCandles: CandleData[] = [];
-    let currentIndex = 0;
-    let interval: NodeJS.Timeout | null = null;
+    return () => {
+      isActiveRef.current = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+        candlestickSeriesRef.current = null;
+      }
+    };
+  }, []); // Пустой массив зависимостей - эффект выполнится только при монтировании
 
-    // Функция для загрузки данных
+  // Обновляем размеры графика при изменении контейнера
+  useEffect(() => {
+    if (!chartRef.current) return;
+    
+    chartRef.current.applyOptions({
+      width: containerWidth,
+      height: containerHeight,
+    });
+  }, [containerWidth, containerHeight]);
+
+  // Загружаем и обновляем данные
+  useEffect(() => {
     const loadData = async () => {
+      if (!isActiveRef.current || !candlestickSeriesRef.current) return;
+
       try {
         setIsLoading(true);
-        // Загружаем данные с Binance API
-        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${selectedPair}&interval=${selectedTimeframe}&limit=1000`);
+        const limit = 1000;
+        const response = await fetch(
+          `${CRYPTO_COMPARE_API}/histominute?fsym=${selectedPair}&tsym=USD&limit=${limit}&aggregate=${
+            selectedTimeframe === 'minute' ? 1 :
+            selectedTimeframe === 'minute5' ? 5 :
+            selectedTimeframe === 'minute15' ? 15 : 60
+          }`
+        );
         const data = await response.json();
         
-        // Преобразуем данные в нужный формат
-        allCandles = data.map((candle: any[]) => ({
-          time: candle[0] as Time,
-          open: parseFloat(candle[1]),
-          high: parseFloat(candle[2]),
-          low: parseFloat(candle[3]),
-          close: parseFloat(candle[4])
-        }));
+        if (!isActiveRef.current) return;
 
-        // Показываем первые 10 свечей
-        candlestickSeries.setData(allCandles.slice(0, 10));
-        currentIndex = 10;
-        
-        // Обновляем текущую цену
-        setCurrentPrice(allCandles[allCandles.length - 1].close.toFixed(2));
-        
-        // Очищаем предыдущий интервал
-        if (interval) {
-          clearInterval(interval);
-        }
-        
-        // Запускаем проигрывание только если не на паузе
-        if (!isPaused) {
-          interval = setInterval(() => {
-            if (currentIndex < allCandles.length) {
-              candlestickSeries.setData(allCandles.slice(0, currentIndex + 1));
-              currentIndex++;
-            } else {
-              currentIndex = 10;
-              candlestickSeries.setData(allCandles.slice(0, 10));
+        if (data.Response === 'Success' && data.Data.Data) {
+          allCandlesRef.current = data.Data.Data.map((candle: any) => ({
+            time: candle.time,
+            open: candle.open,
+            high: candle.high,
+            low: candle.low,
+            close: candle.close
+          }));
+
+          currentIndexRef.current = 10;
+
+          if (candlestickSeriesRef.current) {
+            candlestickSeriesRef.current.setData(allCandlesRef.current.slice(0, 10));
+            
+            const lastCandle = allCandlesRef.current[allCandlesRef.current.length - 1];
+            setCurrentPrice(lastCandle.close.toFixed(2));
+            if (onCandleUpdate) {
+              onCandleUpdate(lastCandle, null);
             }
-          }, selectedSpeed);
+          }
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -156,17 +183,52 @@ const PriceChart: React.FC<PriceChartProps> = ({
       }
     };
 
-    // Загружаем данные при изменении пары или таймфрейма
     loadData();
+  }, [selectedPair, selectedTimeframe]);
 
-    // Очистка
+  // Управляем интервалом обновления
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (!isPaused && isActiveRef.current && candlestickSeriesRef.current) {
+      intervalRef.current = setInterval(() => {
+        if (!isActiveRef.current || !candlestickSeriesRef.current) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          return;
+        }
+
+        if (currentIndexRef.current < allCandlesRef.current.length) {
+          candlestickSeriesRef.current.setData(
+            allCandlesRef.current.slice(0, currentIndexRef.current + 1)
+          );
+          if (onCandleUpdate) {
+            const currentCandle = allCandlesRef.current[currentIndexRef.current];
+            const nextCandle = currentIndexRef.current + 1 < allCandlesRef.current.length 
+              ? allCandlesRef.current[currentIndexRef.current + 1] 
+              : null;
+            onCandleUpdate(currentCandle, nextCandle);
+          }
+          currentIndexRef.current++;
+        } else {
+          currentIndexRef.current = 10;
+          candlestickSeriesRef.current.setData(allCandlesRef.current.slice(0, 10));
+        }
+      }, selectedSpeed);
+    }
+
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
-      chart.remove();
     };
-  }, [containerWidth, containerHeight, selectedPair, selectedTimeframe, selectedSpeed, isPaused]);
+  }, [isPaused, selectedSpeed, onCandleUpdate]);
 
   const handlePauseToggle = () => {
     setIsPaused(!isPaused);
@@ -174,12 +236,12 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
   const handlePairChange = (pair: string) => {
     setSelectedPair(pair);
-    currentIndex = 10;
+    currentIndexRef.current = 10;
   };
 
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);
-    currentIndex = 10;
+    currentIndexRef.current = 10;
   };
 
   const handleSpeedChange = (speed: number) => {

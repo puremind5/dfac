@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PriceChart from './PriceChart';
+import { CandleData, PredictionType } from '../types/trading';
 
-interface Prediction {
-  type: 'UP' | 'DOWN';
-  x: number;
+interface PredictionLog {
+  timestamp: number;
+  prediction: PredictionType;
+  result: 'UP' | 'DOWN';
+  isCorrect: boolean;
 }
 
 const TradingPage: React.FC = () => {
@@ -13,15 +16,19 @@ const TradingPage: React.FC = () => {
   const [score, setScore] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 600 });
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const upAreaRef = useRef<HTMLDivElement>(null);
-  const downAreaRef = useRef<HTMLDivElement>(null);
+  const [upFillLevel, setUpFillLevel] = useState(0);
+  const [downFillLevel, setDownFillLevel] = useState(0);
+  const [currentCandle, setCurrentCandle] = useState<CandleData | null>(null);
+  const [nextCandle, setNextCandle] = useState<CandleData | null>(null);
+  const [currentPrediction, setCurrentPrediction] = useState<PredictionType>(null);
+  const [canMakeNewPrediction, setCanMakeNewPrediction] = useState(true);
+  const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width } = containerRef.current.getBoundingClientRect();
-        setChartDimensions({ width: width - 32, height: 400 }); // 32px для паддингов
+        setChartDimensions({ width: width - 32, height: 400 });
       }
     };
 
@@ -30,13 +37,50 @@ const TradingPage: React.FC = () => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  const handlePrediction = (type: 'UP' | 'DOWN') => {
-    const areaRef = type === 'UP' ? upAreaRef : downAreaRef;
-    if (areaRef.current) {
-      const area = areaRef.current;
-      const x = Math.random() * (area.offsetWidth - 10); // 10px - диаметр кружка
-      setPredictions(prev => [...prev, { type, x }]);
+  const handlePrediction = (type: PredictionType) => {
+    if (!canMakeNewPrediction) return;
+    
+    setCurrentPrediction(type);
+    setCanMakeNewPrediction(false);
+  };
+
+  const checkPrediction = (candle: CandleData) => {
+    if (!currentPrediction) return;
+
+    const isUp = candle.close > candle.open;
+    const result = isUp ? 'UP' : 'DOWN';
+    const isCorrect = (currentPrediction === 'UP' && isUp) || (currentPrediction === 'DOWN' && !isUp);
+    const increment = 10;
+
+    // Добавляем лог
+    setPredictionLogs(prev => [{
+      timestamp: Date.now(),
+      prediction: currentPrediction,
+      result,
+      isCorrect
+    }, ...prev.slice(0, 9)]); // Храним только последние 10 логов
+
+    if (isCorrect) {
+      if (currentPrediction === 'UP') {
+        setUpFillLevel(prev => Math.min(100, prev + increment));
+      } else {
+        setDownFillLevel(prev => Math.min(100, prev + increment));
+      }
+      setScore(prev => prev + 10);
     }
+
+    setCurrentPrediction(null);
+  };
+
+  const handleCandleUpdate = (currentCandle: CandleData, nextCandle: CandleData | null) => {
+    // Если есть предсказание, проверяем его на текущей свече
+    if (currentPrediction && !canMakeNewPrediction) {
+      checkPrediction(currentCandle);
+    }
+
+    setCurrentCandle(currentCandle);
+    setNextCandle(nextCandle);
+    setCanMakeNewPrediction(true);
   };
 
   return (
@@ -69,7 +113,8 @@ const TradingPage: React.FC = () => {
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <PriceChart 
               containerWidth={chartDimensions.width} 
-              containerHeight={chartDimensions.height} 
+              containerHeight={chartDimensions.height}
+              onCandleUpdate={handleCandleUpdate}
             />
           </div>
         </div>  
@@ -81,65 +126,153 @@ const TradingPage: React.FC = () => {
             <div className="flex gap-4">
               <button 
                 onClick={() => handlePrediction('UP')}
-                className="w-1/2 py-3 bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white shadow-[0_0_10px_rgba(0,240,255,0.3)]
-                           hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] transition-shadow"
+                disabled={!canMakeNewPrediction}
+                className={`w-1/2 py-3 bg-gradient-to-r from-green-500 to-[#00f0ff] rounded-lg font-bold text-white 
+                           ${canMakeNewPrediction 
+                             ? 'shadow-[0_0_10px_rgba(0,240,255,0.3)] hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]' 
+                             : 'opacity-50 cursor-not-allowed'} 
+                           transition-all`}
               >
-                UP
+                UP {currentPrediction === 'UP' && '✓'}
               </button>
               <button 
                 onClick={() => handlePrediction('DOWN')}
-                className="w-1/2 py-3 bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white shadow-[0_0_10px_rgba(255,31,143,0.3)]
-                           hover:shadow-[0_0_20px_rgba(255,31,143,0.5)] transition-shadow"
+                disabled={!canMakeNewPrediction}
+                className={`w-1/2 py-3 bg-gradient-to-r from-[#ff1f8f] to-red-500 rounded-lg font-bold text-white 
+                           ${canMakeNewPrediction 
+                             ? 'shadow-[0_0_10px_rgba(255,31,143,0.3)] hover:shadow-[0_0_20px_rgba(255,31,143,0.5)]' 
+                             : 'opacity-50 cursor-not-allowed'} 
+                           transition-all`}
               >
-                DOWN
+                DOWN {currentPrediction === 'DOWN' && '✓'}
               </button>
             </div>
 
-            {/* Области для кружочков */}
-            <div className="flex gap-4 h-20">
-              <div 
-                ref={upAreaRef}
-                className="w-1/2 border-2 border-[#00f0ff] rounded-lg relative"
-                style={{ minHeight: '50px' }}
-              >
-                {predictions
-                  .filter(p => p.type === 'UP')
-                  .map((prediction, index) => (
-                    <div
-                      key={index}
-                      className="absolute bottom-1"
-                      style={{
-                        left: `${prediction.x}px`,
-                        width: '5mm',
-                        height: '5mm',
-                        backgroundColor: '#00f0ff',
-                        borderRadius: '50%',
-                        boxShadow: '0 0 10px rgba(0,240,255,0.5)'
-                      }}
-                    />
-                  ))}
+            {/* Области для сосудов */}
+            <div className="flex gap-4 h-32">
+              <div className="w-1/2 flex justify-center">
+                <div
+                  className="relative"
+                  style={{
+                    width: '60px',
+                    height: '120px',
+                    backgroundColor: 'transparent',
+                    border: '2px solid #00f0ff',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    boxShadow: '0 0 10px rgba(0,240,255,0.3)'
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${upFillLevel}%`,
+                      backgroundColor: '#00f0ff',
+                      transition: 'height 0.5s ease-out',
+                      boxShadow: 'inset 0 0 10px rgba(255,255,255,0.5)',
+                      opacity: 0.7
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      textShadow: '0 0 5px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    {upFillLevel}%
+                  </div>
+                </div>
               </div>
-              <div 
-                ref={downAreaRef}
-                className="w-1/2 border-2 border-[#ff1f8f] rounded-lg relative"
-                style={{ minHeight: '50px' }}
-              >
-                {predictions
-                  .filter(p => p.type === 'DOWN')
-                  .map((prediction, index) => (
-                    <div
-                      key={index}
-                      className="absolute bottom-1"
-                      style={{
-                        left: `${prediction.x}px`,
-                        width: '5mm',
-                        height: '5mm',
-                        backgroundColor: '#ff1f8f',
-                        borderRadius: '50%',
-                        boxShadow: '0 0 10px rgba(255,31,143,0.5)'
-                      }}
-                    />
-                  ))}
+              <div className="w-1/2 flex justify-center">
+                <div
+                  className="relative"
+                  style={{
+                    width: '60px',
+                    height: '120px',
+                    backgroundColor: 'transparent',
+                    border: '2px solid #ff1f8f',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    boxShadow: '0 0 10px rgba(255,31,143,0.3)'
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${downFillLevel}%`,
+                      backgroundColor: '#ff1f8f',
+                      transition: 'height 0.5s ease-out',
+                      boxShadow: 'inset 0 0 10px rgba(255,255,255,0.5)',
+                      opacity: 0.7
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      textShadow: '0 0 5px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    {downFillLevel}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Prediction Logs */}
+            <div className="mt-6 p-4 bg-[#2c1b4d] rounded-lg">
+              <h4 className="text-[#00f0ff] text-sm mb-2">Prediction Logs</h4>
+              
+              {/* Current Prediction */}
+              {currentPrediction && (
+                <div className="text-sm p-2 mb-2 rounded bg-blue-900/30 text-blue-400">
+                  <span className="font-mono">
+                    {new Date().toLocaleTimeString()} →
+                  </span>
+                  {' '}
+                  Current Prediction: <span className="font-bold">{currentPrediction}</span>
+                  {' '}
+                  (waiting for next candle...)
+                </div>
+              )}
+
+              {/* Past Predictions */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {predictionLogs.map((log, index) => (
+                  <div 
+                    key={log.timestamp}
+                    className={`text-sm p-2 rounded ${
+                      log.isCorrect 
+                        ? 'bg-green-900/30 text-green-400' 
+                        : 'bg-red-900/30 text-red-400'
+                    }`}
+                  >
+                    <span className="font-mono">
+                      {new Date(log.timestamp).toLocaleTimeString()} →
+                    </span>
+                    {' '}
+                    Prediction: <span className="font-bold">{log.prediction}</span>
+                    {' '}
+                    Result: <span className="font-bold">{log.result}</span>
+                    {' '}
+                    {log.isCorrect ? '✓' : '✗'}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
