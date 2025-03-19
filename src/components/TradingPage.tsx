@@ -113,7 +113,7 @@ const TradingPage: React.FC = () => {
   }, [gameOver, points, score, successStreak, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-2 sm:p-6 pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-2 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 sm:mb-8">
         <div className="cyberpunk-border p-2 sm:p-4 w-full sm:w-auto">

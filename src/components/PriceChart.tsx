@@ -254,7 +254,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
       <div ref={chartContainerRef} className="w-full" />
 
       {/* Панель управления */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1a0b2e] border-t border-[#2c1b4d] p-2 sm:p-4">
+      <div className="bg-[#1a0b2e] border-t border-[#2c1b4d] p-2 sm:p-4 rounded-lg">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-2 justify-center items-center">
             {/* Пауза */}
