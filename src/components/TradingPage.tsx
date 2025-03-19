@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PriceChart from './PriceChart';
+import MonkeyAnimation from './MonkeyAnimation';
 import { CandleData, PredictionType } from '../types/trading';
 
 interface PredictionLog {
@@ -23,6 +24,7 @@ const TradingPage: React.FC = () => {
   const [currentPrediction, setCurrentPrediction] = useState<PredictionType>(null);
   const [canMakeNewPrediction, setCanMakeNewPrediction] = useState(true);
   const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
+  const [correctPrediction, setCorrectPrediction] = useState(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -51,6 +53,14 @@ const TradingPage: React.FC = () => {
     const result = isUp ? 'UP' : 'DOWN';
     const isCorrect = (currentPrediction === 'UP' && isUp) || (currentPrediction === 'DOWN' && !isUp);
     const increment = 10;
+
+    // Устанавливаем флаг правильного предсказания
+    setCorrectPrediction(isCorrect);
+    
+    // Сбрасываем флаг через короткое время
+    setTimeout(() => {
+      setCorrectPrediction(false);
+    }, 100);
 
     // Добавляем лог
     setPredictionLogs(prev => [{
@@ -278,6 +288,9 @@ const TradingPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Monkey Animation */}
+      <MonkeyAnimation onCorrectPrediction={correctPrediction} />
     </div>
   );
 };
