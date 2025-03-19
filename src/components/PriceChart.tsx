@@ -319,38 +319,10 @@ const PriceChart: React.FC<PriceChartProps> = ({
     };
   }, [isPaused, selectedSpeed, onCandleUpdate]);
 
-  const handlePauseToggle = () => {
-    // Implement pause toggle logic
-  };
-
-  const handlePairChange = (pair: string) => {
-    // Implement pair change logic
-  };
-
-  const handleTimeframeChange = (timeframe: string) => {
-    // Implement timeframe change logic
-  };
-
-  const handleSpeedChange = (speed: number) => {
-    // Implement speed change logic
-  };
-
   return (
     <div className="flex flex-col gap-4">
       {/* График */}
       <div ref={chartContainerRef} className="w-full" />
-
-      {/* Экспортируем состояние и обработчики для панели управления */}
-      <ControlPanel
-        isPaused={isPaused}
-        selectedPair={selectedPair}
-        selectedTimeframe={selectedTimeframe}
-        selectedSpeed={selectedSpeed}
-        onPauseToggle={handlePauseToggle}
-        onPairChange={handlePairChange}
-        onTimeframeChange={handleTimeframeChange}
-        onSpeedChange={handleSpeedChange}
-      />
     </div>
   );
 };
