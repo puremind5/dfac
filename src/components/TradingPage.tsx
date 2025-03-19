@@ -13,6 +13,7 @@ interface PredictionLog {
 const TradingPage: React.FC = () => {
   const navigate = useNavigate();
   const playerName = localStorage.getItem('playerName') || 'Trader';
+  const [points, setPoints] = useState(25); // Начальная ставка
   const [score, setScore] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 600 });
@@ -22,6 +23,7 @@ const TradingPage: React.FC = () => {
   const [currentPrediction, setCurrentPrediction] = useState<PredictionType>(null);
   const [canMakeNewPrediction, setCanMakeNewPrediction] = useState(true);
   const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -37,7 +39,7 @@ const TradingPage: React.FC = () => {
   }, []);
 
   const handlePrediction = (type: PredictionType) => {
-    if (!canMakeNewPrediction) return;
+    if (!canMakeNewPrediction || gameOver || points === 0) return;
     
     setCurrentPrediction(type);
     setCanMakeNewPrediction(false);
@@ -52,16 +54,22 @@ const TradingPage: React.FC = () => {
 
     // Обновляем полоску прогресса
     setSuccessStreak(prev => {
-      if (isCorrect) {
-        return Math.min(prev + 1, 10); // Максимум 10 успехов подряд
-      } else {
-        return Math.max(prev - 1, -10); // Максимум 10 неудач подряд
+      const newStreak = isCorrect ? Math.min(prev + 1, 10) : Math.max(prev - 1, -10);
+      
+      // Проверяем условие окончания игры
+      if (Math.abs(newStreak) === 10) {
+        setGameOver(true);
       }
+      
+      return newStreak;
     });
 
-    // Обновляем счет
+    // Обновляем очки
     if (isCorrect) {
+      setPoints(prev => prev + 5);
       setScore(prev => prev + 10);
+    } else {
+      setPoints(prev => Math.max(0, prev - 5));
     }
 
     // Добавляем лог
@@ -89,6 +97,21 @@ const TradingPage: React.FC = () => {
   const progressWidth = Math.abs(successStreak) * 10; // 10% за каждое предсказание
   const isPositive = successStreak >= 0;
 
+  // Добавляем модальное окно для окончания игры
+  useEffect(() => {
+    if (gameOver || points === 0) {
+      const timeout = setTimeout(() => {
+        const message = gameOver 
+          ? `Игра окончена! ${successStreak > 0 ? 'Вы выиграли!' : 'Вы проиграли!'}`
+          : 'У вас закончились очки!';
+        alert(`${message}\nИтоговый счет: ${score}\nОчки: ${points}`);
+        navigate('/');
+      }, 1000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [gameOver, points, score, successStreak, navigate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-6">
       {/* Header */}
@@ -98,10 +121,17 @@ const TradingPage: React.FC = () => {
             Welcome, {playerName}
           </h2>
         </div>
-        <div className="cyberpunk-border p-4">
-          <h2 className="neon-text text-xl">
-            Score: {score}
-          </h2>
+        <div className="flex gap-4">
+          <div className="cyberpunk-border p-4">
+            <h2 className="neon-text text-xl">
+              Points: {points}
+            </h2>
+          </div>
+          <div className="cyberpunk-border p-4">
+            <h2 className="neon-text text-xl">
+              Score: {score}
+            </h2>
+          </div>
         </div>
         <button 
           onClick={() => navigate('/')}
