@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PriceChart from './PriceChart';
-import MonkeyAnimation from './MonkeyAnimation';
 import { CandleData, PredictionType } from '../types/trading';
 
 interface PredictionLog {
@@ -17,14 +16,12 @@ const TradingPage: React.FC = () => {
   const [score, setScore] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 600 });
-  const [upFillLevel, setUpFillLevel] = useState(0);
-  const [downFillLevel, setDownFillLevel] = useState(0);
+  const [successStreak, setSuccessStreak] = useState(0); // Положительное значение - успехи, отрицательное - неудачи
   const [currentCandle, setCurrentCandle] = useState<CandleData | null>(null);
   const [nextCandle, setNextCandle] = useState<CandleData | null>(null);
   const [currentPrediction, setCurrentPrediction] = useState<PredictionType>(null);
   const [canMakeNewPrediction, setCanMakeNewPrediction] = useState(true);
   const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
-  const [correctPrediction, setCorrectPrediction] = useState(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -52,15 +49,20 @@ const TradingPage: React.FC = () => {
     const isUp = candle.close > candle.open;
     const result = isUp ? 'UP' : 'DOWN';
     const isCorrect = (currentPrediction === 'UP' && isUp) || (currentPrediction === 'DOWN' && !isUp);
-    const increment = 10;
 
-    // Устанавливаем флаг правильного предсказания
-    setCorrectPrediction(isCorrect);
-    
-    // Сбрасываем флаг через короткое время
-    setTimeout(() => {
-      setCorrectPrediction(false);
-    }, 100);
+    // Обновляем полоску прогресса
+    setSuccessStreak(prev => {
+      if (isCorrect) {
+        return Math.min(prev + 1, 10); // Максимум 10 успехов подряд
+      } else {
+        return Math.max(prev - 1, -10); // Максимум 10 неудач подряд
+      }
+    });
+
+    // Обновляем счет
+    if (isCorrect) {
+      setScore(prev => prev + 10);
+    }
 
     // Добавляем лог
     setPredictionLogs(prev => [{
@@ -68,22 +70,12 @@ const TradingPage: React.FC = () => {
       prediction: currentPrediction,
       result,
       isCorrect
-    }, ...prev.slice(0, 9)]); // Храним только последние 10 логов
-
-    if (isCorrect) {
-      if (currentPrediction === 'UP') {
-        setUpFillLevel(prev => Math.min(100, prev + increment));
-      } else {
-        setDownFillLevel(prev => Math.min(100, prev + increment));
-      }
-      setScore(prev => prev + 10);
-    }
+    }, ...prev.slice(0, 9)]);
 
     setCurrentPrediction(null);
   };
 
   const handleCandleUpdate = (currentCandle: CandleData, nextCandle: CandleData | null) => {
-    // Если есть предсказание, проверяем его на текущей свече
     if (currentPrediction && !canMakeNewPrediction) {
       checkPrediction(currentCandle);
     }
@@ -92,6 +84,10 @@ const TradingPage: React.FC = () => {
     setNextCandle(nextCandle);
     setCanMakeNewPrediction(true);
   };
+
+  // Вычисляем ширину и цвет полосок прогресса
+  const progressWidth = Math.abs(successStreak) * 10; // 10% за каждое предсказание
+  const isPositive = successStreak >= 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#1a0b2e]/90 p-6">
@@ -158,89 +154,26 @@ const TradingPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Области для сосудов */}
-            <div className="flex gap-4 h-32">
-              <div className="w-1/2 flex justify-center">
-                <div
-                  className="relative"
-                  style={{
-                    width: '60px',
-                    height: '120px',
-                    backgroundColor: 'transparent',
-                    border: '2px solid #00f0ff',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                    boxShadow: '0 0 10px rgba(0,240,255,0.3)'
+            {/* Progress Bar */}
+            <div className="mt-6">
+              <div className="relative h-8 bg-gray-800 rounded-lg overflow-hidden">
+                {/* Центральная линия */}
+                <div className="absolute top-0 left-1/2 w-[2px] h-full bg-gray-600"></div>
+                
+                {/* Полоска прогресса */}
+                <div 
+                  className={`absolute top-0 h-full transition-all duration-500 ${
+                    isPositive ? 'left-1/2 bg-green-500' : 'right-1/2 bg-red-500'
+                  }`}
+                  style={{ 
+                    width: `${progressWidth}%`,
+                    boxShadow: `0 0 20px ${isPositive ? '#00ff00' : '#ff0000'}`
                   }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${upFillLevel}%`,
-                      backgroundColor: '#00f0ff',
-                      transition: 'height 0.5s ease-out',
-                      boxShadow: 'inset 0 0 10px rgba(255,255,255,0.5)',
-                      opacity: 0.7
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      textShadow: '0 0 5px rgba(0,0,0,0.5)'
-                    }}
-                  >
-                    {upFillLevel}%
-                  </div>
-                </div>
+                ></div>
               </div>
-              <div className="w-1/2 flex justify-center">
-                <div
-                  className="relative"
-                  style={{
-                    width: '60px',
-                    height: '120px',
-                    backgroundColor: 'transparent',
-                    border: '2px solid #ff1f8f',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                    boxShadow: '0 0 10px rgba(255,31,143,0.3)'
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${downFillLevel}%`,
-                      backgroundColor: '#ff1f8f',
-                      transition: 'height 0.5s ease-out',
-                      boxShadow: 'inset 0 0 10px rgba(255,255,255,0.5)',
-                      opacity: 0.7
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      textShadow: '0 0 5px rgba(0,0,0,0.5)'
-                    }}
-                  >
-                    {downFillLevel}%
-                  </div>
-                </div>
+              <div className="flex justify-between mt-1 text-sm">
+                <span className="text-red-400">Losses</span>
+                <span className="text-green-400">Wins</span>
               </div>
             </div>
 
@@ -288,9 +221,6 @@ const TradingPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Monkey Animation */}
-      <MonkeyAnimation onCorrectPrediction={correctPrediction} />
     </div>
   );
 };
